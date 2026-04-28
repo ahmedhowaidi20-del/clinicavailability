@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Clinics">
+<meta name="theme-color" content="#1565C0">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Clinic Availability</title>
+<style>
+:root{--blue:#1565C0;--bg:#F0F4FA;--radius:14px;--shadow:0 2px 10px rgba(0,0,0,0.08);}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#1a1a1a;min-height:100vh;padding-bottom:88px;}
+.header{background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;padding:14px 14px 12px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(21,101,192,0.35);}
+.hicon{width:38px;height:38px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.hinfo h1{font-size:16px;font-weight:700;}
+.hinfo p{font-size:11px;opacity:0.75;margin-top:1px;}
+.live-badge{font-size:10px;background:rgba(255,255,255,0.15);padding:2px 9px;border-radius:99px;display:inline-flex;align-items:center;gap:4px;margin-top:4px;}
+.ldot{width:6px;height:6px;background:#69F0AE;border-radius:50%;animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #E0E0E0;display:flex;z-index:200;box-shadow:0 -2px 10px rgba(0,0,0,0.07);}
+.nav-btn{flex:1;padding:8px 4px 10px;border:none;background:transparent;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;color:#9E9E9E;font-family:inherit;}
+.nav-btn.active{color:#1565C0;}
+.nav-btn .nicon{font-size:22px;line-height:1;}
+.nav-btn .nlabel{font-size:10px;font-weight:600;}
+.panel{display:none;padding:12px 10px 0;}.panel.active{display:block;}
+.sptop{height:10px;}
+.week-bar{background:#fff;border-radius:var(--radius);padding:10px 14px;margin-bottom:10px;box-shadow:var(--shadow);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.week-bar label{font-size:12px;color:#777;font-weight:500;}
+.week-bar input{border:none;background:transparent;font-size:13px;font-weight:600;color:#1a1a1a;font-family:inherit;outline:none;min-width:120px;}
+.week-range{font-size:12px;color:#1565C0;font-weight:600;margin-left:auto;}
+.legend{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;}
+.lchip{display:flex;align-items:center;gap:4px;font-size:10px;color:#555;background:#fff;padding:4px 8px;border-radius:99px;box-shadow:0 1px 4px rgba(0,0,0,0.07);font-weight:500;}
+.lc{width:7px;height:7px;border-radius:50%;}
+.day-block{margin-bottom:12px;}
+.day-title{font-size:13px;font-weight:800;color:#0D47A1;background:#fff;padding:7px 12px;border-radius:10px 10px 0 0;border-bottom:2px solid #BBDEFB;display:flex;align-items:center;justify-content:space-between;}
+.day-title .ddate{font-size:11px;font-weight:400;color:#888;}
+.sch-table{width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 10px 10px;overflow:hidden;box-shadow:var(--shadow);}
+.sch-table th{background:#1565C0;color:#fff;padding:6px 2px;font-size:10px;font-weight:700;text-align:center;}
+.sch-table th.sess-th{background:#0D47A1;width:28px;font-size:9px;}
+.sch-table td{padding:0;border:0.5px solid #E8EDF5;vertical-align:middle;text-align:center;}
+.sess-td{background:#E8EEF8;font-size:9px;font-weight:800;color:#3D5A99;text-transform:uppercase;letter-spacing:0.04em;width:28px;border-right:2px solid #BBDEFB;padding:4px 2px;}
+.thu-sess{background:#FFF9C4;color:#7A6000;border-right:2px solid #F9E04B;}
+.thu-th{background:#F9A825;}
+.dc{padding:5px 2px;font-size:11px;font-weight:600;line-height:1.2;}
+.dc-surgery{color:#C62828;font-style:italic;font-size:10px;}
+.dc-empty{color:#C5CAE9;font-size:11px;}
+.dc-free{background:linear-gradient(135deg,#43A047,#2E7D32);border:1.5px solid #1B5E20;border-radius:6px;margin:2px;box-shadow:0 2px 8px rgba(46,125,50,0.35);}
+.dc-free .free-top{color:#fff;font-size:10px;font-weight:800;display:block;text-shadow:0 1px 2px rgba(0,0,0,0.2);}
+.dc-free .free-doc{color:rgba(255,255,255,0.9);font-size:9px;display:block;}
+.dc-free .free-spec{color:rgba(255,255,255,0.75);font-size:8px;display:block;}
+.dc-partial{background:#FFF3E0;}
+.dc-partial .doc-name{color:#E65100;font-size:10px;display:block;}
+.dc-partial .part-tag{display:block;font-size:8px;color:#BF360C;font-weight:700;}
+.dc-busy .doc-name{font-size:11px;font-weight:600;}
+.sp-note{font-size:8px;color:#9E9E9E;display:block;}
+.sp-prostho{color:#4527A0;}.sp-endo{color:#BF360C;}.sp-perio{color:#00695C;}
+.sp-resto{color:#1565C0;}.sp-ortho{color:#880E4F;}.sp-operative{color:#E65100;}
+.sp-special{color:#33691E;}.sp-fixed{color:#311B92;}
+.scard{background:#fff;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin-bottom:10px;}
+.scard h2{font-size:14px;font-weight:700;margin-bottom:12px;}
+.field{margin-bottom:10px;}
+.field label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px;}
+.field select,.field input[type=date],.field input[type=text]{width:100%;padding:12px 13px;border-radius:10px;border:1.5px solid #E0E0E0;background:#F8F9FA;color:#1a1a1a;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;}
+.field select:focus,.field input:focus{border-color:#1565C0;background:#fff;}
+.field-other{border-color:#1565C0 !important;background:#EFF6FF !important;}
+.big-btn{width:100%;padding:15px;border-radius:var(--radius);border:none;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px;background:linear-gradient(135deg,#1976D2,#1565C0);color:#fff;box-shadow:0 4px 14px rgba(21,101,192,0.3);}
+.big-btn:active{opacity:0.85;}
+.abs-item{background:#fff;border-radius:10px;padding:11px 12px;box-shadow:var(--shadow);margin-bottom:7px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.ainfo{flex:1;}
+.aname{font-size:13px;font-weight:700;margin-bottom:1px;}
+.ameta{font-size:11px;color:#9E9E9E;}
+.apill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:99px;margin-bottom:3px;font-weight:600;}
+.pdoc{background:#E3F2FD;color:#1565C0;}.passt{background:#E8F5E9;color:#2E7D32;}
+.delbtn{width:36px;height:36px;border-radius:9px;border:none;background:#FFEBEE;color:#C62828;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+.empty{text-align:center;padding:18px;color:#BDBDBD;font-size:13px;}
+.stf-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F0F0F0;}
+.stf-item:last-child{border:none;}
+.stf-name{font-size:13px;font-weight:700;}
+.stf-spec{display:inline-block;font-size:10px;padding:2px 7px;border-radius:99px;margin-top:2px;font-weight:600;}
+.rmbtn{width:32px;height:32px;border-radius:8px;border:none;background:#FFEBEE;color:#C62828;font-size:17px;cursor:pointer;font-weight:700;}
+.add-row{display:flex;gap:6px;margin-top:10px;align-items:center;}
+.add-row input{flex:1;padding:11px;border-radius:10px;border:1.5px solid #E0E0E0;background:#F8F9FA;font-size:13px;font-family:inherit;outline:none;}
+.add-row input:focus{border-color:#1565C0;background:#fff;}
+.addbtn{padding:11px 13px;border-radius:10px;border:none;background:#E3F2FD;color:#1565C0;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;white-space:nowrap;}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:99px;font-size:11px;background:#E8F0FE;color:#1565C0;margin:2px;font-weight:500;}
+.chip .x{cursor:pointer;font-size:14px;color:#90A4AE;}
+
+/* BOOKING MODAL */
+.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:500;display:flex;align-items:flex-end;justify-content:center;}
+.modal-overlay.hidden{display:none;}
+.modal-box{background:#fff;border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:480px;box-shadow:0 -4px 24px rgba(0,0,0,0.15);}
+.modal-title{font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;}
+.modal-sub{font-size:12px;color:#9E9E9E;margin-bottom:16px;}
+.modal-field{margin-bottom:12px;}
+.modal-field label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px;}
+.modal-field select,.modal-field input{width:100%;padding:12px 13px;border-radius:10px;border:1.5px solid #E0E0E0;background:#F8F9FA;color:#1a1a1a;font-size:14px;font-family:inherit;outline:none;-webkit-appearance:none;appearance:none;}
+.modal-field select:focus,.modal-field input:focus{border-color:#1565C0;background:#fff;}
+.time-row{display:flex;gap:10px;}
+.time-row .modal-field{flex:1;}
+.modal-btn-row{display:flex;gap:8px;margin-top:4px;}
+.btn-book{flex:1;padding:14px;border-radius:12px;border:none;background:linear-gradient(135deg,#1976D2,#1565C0);color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 4px 12px rgba(21,101,192,0.3);}
+.btn-cancel-modal{padding:14px 16px;border-radius:12px;border:1.5px solid #E0E0E0;background:#F8F9FA;color:#555;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
+/* BOOKED CELL */
+.dc-booked{background:linear-gradient(135deg,#1565C0,#0D47A1) !important;border:1.5px solid #0D47A1 !important;border-radius:6px;margin:2px;box-shadow:0 2px 8px rgba(21,101,192,0.35);cursor:pointer;}
+.dc-booked .booked-top{color:#fff;font-size:9px;font-weight:800;display:block;text-shadow:0 1px 2px rgba(0,0,0,0.2);}
+.dc-booked .booked-doc{color:rgba(255,255,255,0.95);font-size:10px;font-weight:700;display:block;}
+.dc-booked .booked-time{color:rgba(255,255,255,0.8);font-size:9px;display:block;}
+/* FREE cell clickable */
+.dc-free{cursor:pointer;}
+.dc-free:active{opacity:0.85;}
+
+/* LOG STATS */
+.stat-card{background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.08);text-align:center;}
+.stat-card .sv{font-size:28px;font-weight:800;color:#1565C0;line-height:1;}
+.stat-card .sl{font-size:10px;color:#9E9E9E;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;}
+.log-item{padding:10px 0;border-bottom:1px solid #F0F0F0;display:flex;gap:10px;align-items:flex-start;}
+.log-item:last-child{border:none;}
+.log-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px;}
+.log-dot.absence{background:#E53935;}
+.log-dot.booking{background:#43A047;}
+.log-text{flex:1;}
+.log-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
+.log-sub{font-size:11px;color:#9E9E9E;}
+.log-date{font-size:10px;color:#BDBDBD;white-space:nowrap;}
+.empty-log{text-align:center;padding:24px;color:#BDBDBD;font-size:13px;}
+
+.lv-btn{padding:6px 12px;border-radius:8px;border:1.5px solid #E0E0E0;background:#F8F9FA;color:#777;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;}
+.lv-active{background:#E3F2FD;border-color:#BBDEFB;color:#1565C0;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hicon" style="background:transparent;padding:0;overflow:hidden;"><img src="icon-192.png" style="width:38px;height:38px;border-radius:10px;object-fit:cover;display:block;"></div>
+  <div class="hinfo">
+    <h1>Clinic Availability</h1>
+    <p>Dental and Maxillofacial Outpatient Clinics</p>
+    <div class="live-badge">
+      <div class="ldot" id="ldot-el"></div>
+      <span id="live-text">Connecting...</span>
+    </div>
+  </div>
+</div>
+
+<div id="panel-schedule" class="panel active">
+  <div class="sptop"></div>
+  <div class="week-bar">
+    <button onclick="changeWeek(-1)" style="background:#E3F2FD;border:none;border-radius:10px;width:44px;height:44px;font-size:24px;cursor:pointer;color:#1565C0;flex-shrink:0;font-weight:700;">&#8592;</button>
+    <div style="flex:1;text-align:center;padding:0 6px;">
+      <div style="font-size:10px;color:#9E9E9E;font-weight:600;letter-spacing:0.05em;margin-bottom:4px;">SELECT WEEK</div>
+      <select id="week-picker" onchange="pickWeekFromSelect()" style="width:100%;border:1.5px solid #BBDEFB;border-radius:8px;padding:5px 6px;font-size:12px;font-weight:600;color:#1565C0;background:#F0F7FF;font-family:inherit;outline:none;cursor:pointer;-webkit-appearance:none;appearance:none;text-align:center;"></select>
+    </div>
+    <button onclick="changeWeek(1)" style="background:#E3F2FD;border:none;border-radius:10px;width:44px;height:44px;font-size:24px;cursor:pointer;color:#1565C0;flex-shrink:0;font-weight:700;">&#8594;</button>
+  </div>
+  <div style="text-align:center;margin-bottom:8px;">
+    <button onclick="goToThisWeek()" style="background:linear-gradient(135deg,#1976D2,#1565C0);border:none;border-radius:99px;padding:7px 20px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(21,101,192,0.3);">&#11088; This Week</button>
+  </div>
+
+  <div id="schedule-view"></div>
+</div>
+
+<div id="panel-absence" class="panel">
+  <div class="sptop"></div>
+  <div class="scard">
+    <h2>&#128197; Log absence</h2>
+    <div class="field">
+      <label>Staff type</label>
+      <select id="abs-type" onchange="populateAbsStaff()">
+        <option value="doctor">Doctor</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Name</label>
+      <select id="abs-name"></select>
+    </div>
+    <div class="field">
+      <label>From date</label>
+      <input type="date" id="abs-date">
+    </div>
+    <div class="field">
+      <label>To date (same day if one day only)</label>
+      <input type="date" id="abs-date-to">
+    </div>
+    <div class="field">
+      <label>Session</label>
+      <select id="abs-session">
+        <option value="all">All sessions - Full day</option>
+        <option value="morning">Morning only (08:00-12:00)</option>
+        <option value="afternoon">Afternoon only (13:00-16:00)</option>
+        <option value="evening">Evening only (16:00-18:00)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Reason</label>
+      <select id="abs-reason" onchange="toggleOther()">
+        <option value="Planned leave">Planned leave</option>
+        <option value="Emergency">Emergency</option>
+        <option value="Sick leave">Sick leave</option>
+        <option value="Permission">Permission</option>
+        <option value="other">Other...</option>
+      </select>
+    </div>
+    <div class="field" id="other-box" style="display:none;">
+      <label>Please specify</label>
+      <input type="text" id="abs-other" class="field-other" placeholder="Type the reason...">
+    </div>
+    <button class="big-btn" id="log-btn" onclick="logAbsence()">&#10003; Confirm absence</button>
+  </div>
+  <div class="scard">
+    <h2>&#128203; Logged absences</h2>
+    <div id="absence-list"><div class="empty">No absences logged yet</div></div>
+  </div>
+</div>
+
+<div id="panel-staff" class="panel">
+  <div class="sptop"></div>
+  <div class="scard">
+    <h2>&#128104;&#8205;&#9877; Doctors</h2>
+    <div id="doctor-list"></div>
+    <div class="add-row">
+      <input type="text" id="new-doctor" placeholder="Dr. Name">
+      <input type="text" id="new-doctor-spec" placeholder="Specialty">
+      <button class="addbtn" onclick="addDoctor()">+ Add</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- LOG & STATS PANEL -->
+<div id="panel-log" class="panel">
+  <div class="sptop"></div>
+
+  <!-- FILTER BAR -->
+  <div style="background:#fff;border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button onclick="setLogView('week')" id="lv-week" class="lv-btn lv-active">Week</button>
+      <button onclick="setLogView('month')" id="lv-month" class="lv-btn">Month</button>
+      <button onclick="setLogView('year')" id="lv-year" class="lv-btn">Year</button>
+      <button onclick="setLogView('all')" id="lv-all" class="lv-btn">All time</button>
+      <button onclick="exportReport()" style="margin-left:auto;padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#1976D2,#1565C0);color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">&#128229; Export</button>
+    </div>
+    <div id="log-period-picker" style="display:flex;align-items:center;gap:8px;">
+      <button onclick="shiftPeriod(-1)" style="background:#E3F2FD;border:none;border-radius:8px;width:32px;height:32px;font-size:18px;cursor:pointer;color:#1565C0;font-weight:700;">&#8592;</button>
+      <div id="log-period-label" style="flex:1;text-align:center;font-size:13px;font-weight:700;color:#1565C0;"></div>
+      <button onclick="shiftPeriod(1)" id="period-next" style="background:#E3F2FD;border:none;border-radius:8px;width:32px;height:32px;font-size:18px;cursor:pointer;color:#1565C0;font-weight:700;">&#8594;</button>
+    </div>
+  </div>
+
+  <!-- STATS CARDS -->
+  <div id="stats-cards" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;"></div>
+
+  <!-- UTILIZATION BAR -->
+  <div id="util-bar-wrap" style="background:#fff;border-radius:14px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,0.08);margin-bottom:12px;display:none;">
+    <div style="font-size:12px;font-weight:700;color:#555;margin-bottom:8px;">Clinic utilization rate</div>
+    <div style="background:#F0F4FA;border-radius:99px;height:14px;overflow:hidden;">
+      <div id="util-bar" style="height:100%;background:linear-gradient(90deg,#43A047,#69F0AE);border-radius:99px;transition:width 0.5s;width:0%;"></div>
+    </div>
+    <div id="util-label" style="font-size:12px;color:#888;margin-top:6px;text-align:right;"></div>
+  </div>
+
+  <!-- ACTIVITY FEED -->
+  <div class="scard">
+    <h2 style="margin-bottom:14px;">&#128203; Activity log</h2>
+    <div id="log-feed"></div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-schedule" onclick="switchTab('schedule',this)">
+    <span class="nicon">&#127973;</span><span class="nlabel">Schedule</span>
+  </button>
+  <button class="nav-btn" id="nav-absence" onclick="switchTab('absence',this)">
+    <span class="nicon">&#128221;</span><span class="nlabel">Absence</span>
+  </button>
+  <button class="nav-btn" id="nav-staff" onclick="switchTab('staff',this)">
+    <span class="nicon">&#128101;</span><span class="nlabel">Staff</span>
+  </button>
+  <button class="nav-btn" id="nav-log" onclick="switchTab('log',this)">
+    <span class="nicon">&#128202;</span><span class="nlabel">Log</span>
+  </button>
+</nav>
+
+<!-- BOOKING MODAL -->
+<div class="modal-overlay hidden" id="booking-modal">
+  <div class="modal-box">
+    <div class="modal-title" id="modal-title">Book clinic</div>
+    <div class="modal-sub" id="modal-sub"></div>
+    <div class="modal-field">
+      <label>Your name</label>
+      <select id="modal-doctor"></select>
+    </div>
+    <div class="time-row">
+      <div class="modal-field">
+        <label>From</label>
+        <select id="modal-from"></select>
+      </div>
+      <div class="modal-field">
+        <label>To</label>
+        <select id="modal-to"></select>
+      </div>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-cancel-modal" onclick="closeModal()">Cancel</button>
+      <button class="btn-book" onclick="confirmBooking()">&#128197; Book this clinic</button>
+    </div>
+  </div>
+</div>
+
+<!-- CANCEL BOOKING MODAL -->
+<div class="modal-overlay hidden" id="cancel-modal">
+  <div class="modal-box">
+    <div class="modal-title">Cancel booking?</div>
+    <div class="modal-sub" id="cancel-sub"></div>
+    <div class="modal-field">
+      <label>Your name (must match who booked)</label>
+      <select id="cancel-doctor"></select>
+    </div>
+    <div class="modal-btn-row">
+      <button class="btn-cancel-modal" onclick="closeCancelModal()">Keep booking</button>
+      <button class="btn-book" style="background:linear-gradient(135deg,#C62828,#B71C1C);" onclick="confirmCancel()">&#10005; Cancel booking</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var SB_URL = 'https://efqhigakipvabbcspurq.supabase.co';
+var SB_KEY = 'sb_publishable_LszitImdN0859bqSCjwW9g__ocYqzPr';
+
+var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
+var SESS_LABEL = {morning:'AM', afternoon:'PM', evening:'Eve'};
+var SESS_FULL = {morning:'Morning 08:00-12:00', afternoon:'Afternoon 13:00-16:00', evening:'Evening 16:00-18:00'};
+var CLINICS = ['Clinic 1','Clinic 2','Clinic 3','Clinic 4'];
+var SRG = 'SURGERY BLOCK';
+
+var SPEC_CSS = {
+  'Prosthodontist':'sp-prostho','Endodontist':'sp-endo','Periodontist':'sp-perio',
+  'Restorative':'sp-resto','Orthodontist':'sp-ortho','Operative':'sp-operative',
+  'Special Needs':'sp-special','Fixed Prosthodontist':'sp-fixed'
+};
+var SPEC_STYLE = {
+  'Prosthodontist':{bg:'#EDE7F6',cl:'#4527A0'},'Endodontist':{bg:'#FBE9E7',cl:'#BF360C'},
+  'Periodontist':{bg:'#E0F2F1',cl:'#00695C'},'Restorative':{bg:'#E3F2FD',cl:'#1565C0'},
+  'Orthodontist':{bg:'#FCE4EC',cl:'#880E4F'},'Operative':{bg:'#FFF8E1',cl:'#E65100'},
+  'Special Needs':{bg:'#F1F8E9',cl:'#33691E'},'Fixed Prosthodontist':{bg:'#EDE7F6',cl:'#311B92'}
+};
+function ss(s) { var c = SPEC_STYLE[s]; return c ? 'background:'+c.bg+';color:'+c.cl+';' : 'background:#F5F5F5;color:#555;'; }
+function scls(s) { return SPEC_CSS[s] || ''; }
+
+var state = {
+  doctors: [
+    {name:'Dr. Kariem', spec:'Prosthodontist'},
+    {name:'Dr. Fatima', spec:'Endodontist'},
+    {name:'Dr. Sherif', spec:'Endodontist'},
+    {name:'Dr. Nehal', spec:'Periodontist'},
+    {name:'Dr. Hewaidi', spec:'Restorative'},
+    {name:'Dr. Noran', spec:'Orthodontist'},
+    {name:'Dr. Amira', spec:'Fixed Prosthodontist'},
+    {name:'Dr. Iina', spec:'Orthodontist'},
+    {name:'Dr. Wael', spec:'Operative'},
+    {name:'Dr. Mawadah', spec:'Orthodontist'},
+    {name:'Dr. Mohamed Alqarni', spec:'Special Needs'}
+  ],
+  assistants: ['Dania','Amani T','Ahlam','Kholood','Adawiya','Nojood','Ebtehal','Dana','Melani','Amani H','Monerah','Meelani'],
+  absences: [],
+  schedule: {},
+  bookings: []
+};
+
+function sk(d,s,c) { return d+'__'+s+'__'+c; }
+
+function loadSchedule() {
+  var S = state.schedule;
+  function a(d,s,c,doc,asst) { S[sk(d,s,c)] = {doctor:doc||'', assistant:asst||''}; }
+  a(0,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
+  a(0,'morning','Clinic 2','Dr. Fatima','Kholood / Adawiya');
+  a(0,'morning','Clinic 3','Dr. Sherif (Consultation)','Ebtehal / Dana');
+  a(0,'morning','Clinic 4','Dr. Nehal','Melani / Amani H');
+  a(0,'afternoon','Clinic 1','Dr. Kariem','Dania / Amani T');
+  a(0,'afternoon','Clinic 2','Dr. Hewaidi','Adawiya / Kholood');
+  a(0,'afternoon','Clinic 3','Dr. Sherif (Consultation)','Ebtehal / Dana');
+  a(0,'afternoon','Clinic 4','Dr. Noran','Melani / Amani H');
+  a(0,'evening','Clinic 1','','');
+  a(0,'evening','Clinic 2','Dr. Hewaidi','Nojood');
+  a(0,'evening','Clinic 3','','');
+  a(0,'evening','Clinic 4','Dr. Noran','Amani H');
+  a(1,'morning','Clinic 1',SRG,'Ahlam / Amani T');
+  a(1,'morning','Clinic 2','Dr. Sherif','Adawiya');
+  a(1,'morning','Clinic 3','Dr. Hewaidi (Consultation)','');
+  a(1,'morning','Clinic 4',SRG,'Amani H / Dana');
+  a(1,'afternoon','Clinic 1',SRG,'Amani T / Ahlam');
+  a(1,'afternoon','Clinic 2','Dr. Fatima','Adawiya / Kholood');
+  a(1,'afternoon','Clinic 3','Dr. Nehal','Dana / Ebtehal');
+  a(1,'afternoon','Clinic 4','Dr. Amira','Melani / Amani H');
+  a(1,'evening','Clinic 1','Dr. Nehal (Hygiene)','');
+  a(1,'evening','Clinic 2','Dr. Fatima','Kholood');
+  a(1,'evening','Clinic 3','Dr. Iina','Ebtehal');
+  a(1,'evening','Clinic 4','Dr. Amira','Meelani');
+  a(2,'morning','Clinic 1',SRG,'Ahlam');
+  a(2,'morning','Clinic 2','Dr. Sherif','Adawiya / Kholood');
+  a(2,'morning','Clinic 3','Dr. Hewaidi','Ebtehal');
+  a(2,'morning','Clinic 4','Dr. Noran','Melani / Amani H');
+  a(2,'afternoon','Clinic 1',SRG,'Ahlam / Amani T');
+  a(2,'afternoon','Clinic 2','Dr. Wael','Adawiya / Kholood');
+  a(2,'afternoon','Clinic 3','Dr. Iina','Ebtehal / Dana');
+  a(2,'afternoon','Clinic 4','Dr. Mawadah','Melani / Amani H');
+  a(2,'evening','Clinic 1','Dr. Kariem','');
+  a(2,'evening','Clinic 2','Dr. Wael','Amani T');
+  a(2,'evening','Clinic 3','','');
+  a(2,'evening','Clinic 4','Dr. Mawadah','Dania');
+  a(3,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
+  a(3,'morning','Clinic 2','Dr. Fatima','Kholood');
+  a(3,'morning','Clinic 3','Dr. Hewaidi','Ebtehal / Dana');
+  a(3,'morning','Clinic 4','Dr. Amira','Melani / Amani H');
+  a(3,'afternoon','Clinic 1','Dr. Kariem','Amani T / Dania');
+  a(3,'afternoon','Clinic 2','Dr. Mohamed Alqarni','Adawiya / Kholood');
+  a(3,'afternoon','Clinic 3','Dr. Nehal','Ebtehal / Dana');
+  a(3,'afternoon','Clinic 4','Dr. Amira','Amani H / Melani');
+  a(3,'evening','Clinic 1','','');
+  a(3,'evening','Clinic 2','Dr. Sherif','Adawiya');
+  a(3,'evening','Clinic 3','Dr. Nehal','Monerah');
+  a(3,'evening','Clinic 4','','');
+  a(4,'morning','Clinic 1',SRG,'Amani T / Ahlam');
+  a(4,'morning','Clinic 2','Dr. Wael','Adawiya / Kholood');
+  a(4,'morning','Clinic 3','Dr. Amira','Ebtehal / Dana');
+  a(4,'morning','Clinic 4','Dr. Mawadah','Melani / Amani H');
+  a(4,'afternoon','Clinic 1','Dr. Wael (Consultation)','Amani T / Ahlam');
+  a(4,'afternoon','Clinic 2','Dr. Fatima','Adawiya / Kholood');
+  a(4,'afternoon','Clinic 3','Dr. Amira','Ebtehal / Dana');
+  a(4,'afternoon','Clinic 4','Dr. Iina','Amani H / Melani');
+}
+
+async function dbFetch(path, opts) {
+  opts = opts || {};
+  var headers = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer ' + SB_KEY,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Prefer': 'return=representation'
+  };
+  if (opts.headers) { Object.assign(headers, opts.headers); }
+  var res = await fetch(SB_URL + '/rest/v1/' + path, {
+    method: opts.method || 'GET',
+    headers: headers,
+    body: opts.body || undefined
+  });
+  var text = await res.text();
+  if (!res.ok) { throw new Error('HTTP ' + res.status + ': ' + text.substring(0,100)); }
+  return text ? JSON.parse(text) : [];
+}
+
+async function loadAbsences() {
+  try {
+    var data = await dbFetch('absences?select=id,type,name,date,session,reason,date_from,date_to&order=date.asc');
+    state.absences = data.map(function(a) {
+      return {
+        id: a.id,
+        type: a.type || 'doctor',
+        name: a.name || '',
+        date: a.date || '',
+        session: a.session || 'all',
+        reason: a.reason || '',
+        date_from: a.date_from || a.date || '',
+        date_to: a.date_to || a.date || ''
+      };
+    });
+    document.getElementById('live-text').textContent = 'Live - syncing across devices';
+    document.getElementById('ldot-el').style.background = '#69F0AE';
+  } catch(e) {
+    document.getElementById('live-text').textContent = 'Offline: ' + e.message.substring(0,35);
+    document.getElementById('ldot-el').style.background = '#FF5252';
+    state.absences = [];
+  }
+}
+
+function getSpec(name) {
+  var base = name.replace(/\s*\(.*\)/g,'').trim();
+  var d = state.doctors.find(function(d) { return d.name === base || name.startsWith(d.name); });
+  return d ? d.spec : '';
+}
+
+function isAbsent(name, dateStr, sess) {
+  var base = name.replace(/\s*\(.*\)/g,'').trim();
+  return state.absences.some(function(a) {
+    return (a.name === name || a.name === base) && a.date === dateStr && (a.session === 'all' || a.session === sess);
+  });
+}
+
+function isAsstGone(field, dateStr, sess) {
+  return true; // No dental assistant tracking - always considered available
+}
+
+function getSunday(ds) {
+  var d = new Date(ds + 'T00:00:00');
+  d.setDate(d.getDate() - d.getDay());
+  return d;
+}
+
+function fmt(d) { return d.toISOString().split('T')[0]; }
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('.nav-btn').forEach(function(b) { b.classList.remove('active'); });
+  document.getElementById('panel-' + tab).classList.add('active');
+  btn.classList.add('active');
+  if (tab === 'staff') renderStaff();
+  if (tab === 'absence') { populateAbsStaff(); renderAbsenceList(); }
+  if (tab === 'schedule') renderSchedule();
+  if (tab === 'log') { setLogView(logView); renderLog(); }
+}
+
+// ── LOG & STATISTICS ──────────────────────────────────────────
+// ── LOG VIEW STATE ────────────────────────────────────────────
+var logView = 'week'; // week | month | year | all
+var logOffset = 0;   // 0 = current period, -1 = previous, etc.
+
+function setLogView(view) {
+  logView = view;
+  logOffset = 0;
+  document.querySelectorAll('.lv-btn').forEach(function(b){ b.classList.remove('lv-active'); });
+  document.getElementById('lv-'+view).classList.add('lv-active');
+  document.getElementById('log-period-picker').style.display = view === 'all' ? 'none' : 'flex';
+  renderLog();
+}
+
+function shiftPeriod(dir) {
+  logOffset += dir;
+  // Don't allow going into the future
+  if (logOffset > 0) { logOffset = 0; }
+  renderLog();
+}
+
+function getPeriodDates() {
+  var today = new Date(); today.setHours(0,0,0,0);
+  var from, to, label;
+  if (logView === 'week') {
+    var sun = new Date(today.getTime());
+    sun.setDate(today.getDate() - today.getDay());
+    sun = new Date(sun.getTime() + logOffset * 7 * 24 * 60 * 60 * 1000);
+    var thu = new Date(sun.getTime() + 4 * 24 * 60 * 60 * 1000);
+    from = fmt(sun); to = fmt(thu);
+    label = fmtDMY(sun) + ' → ' + fmtDMY(thu);
+  } else if (logView === 'month') {
+    var d = new Date(today.getFullYear(), today.getMonth() + logOffset, 1);
+    from = fmt(d);
+    var last = new Date(d.getFullYear(), d.getMonth()+1, 0);
+    to = fmt(last);
+    label = d.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+  } else if (logView === 'year') {
+    var yr = today.getFullYear() + logOffset;
+    from = yr + '-01-01'; to = yr + '-12-31';
+    label = yr.toString();
+  } else {
+    from = '2000-01-01'; to = '2099-12-31';
+    label = 'All time';
+  }
+  return {from:from, to:to, label:label};
+}
+
+function fmtDMY(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+
+function populateLogFilter() {} // kept for compatibility
+
+function renderLog() {
+  var period = getPeriodDates();
+  var todayStr = new Date().toISOString().split('T')[0];
+
+  // Update UI
+  var lbl = document.getElementById('log-period-label');
+  if (lbl) lbl.textContent = period.label;
+  var nextBtn = document.getElementById('period-next');
+  if (nextBtn) nextBtn.style.opacity = logOffset >= 0 ? '0.3' : '1';
+
+  var SLOTS_PER_WEEK = 51; // Total dept slots per week (incl. surgery, excl. empty evenings)
+  var HOURS_PER_WEEK = 152; // Total clinical hours per week
+  var SESSION_HOURS = {morning: 4, afternoon: 2.5, evening: 2}; // hours per session
+
+  // Only count PAST dates within the selected period (no future bookings/absences)
+  var absences = state.absences.filter(function(a) {
+    return a.date >= period.from && a.date <= period.to && a.date <= todayStr;
+  });
+  var bookings = state.bookings.filter(function(b) {
+    return b.date >= period.from && b.date <= period.to && b.date <= todayStr;
+  });
+
+  // ── CORRELATED STATS ─────────────────────────────────────────
+  // Group absences into unique events (by name+from+to+session+reason)
+  var absGroups = {};
+  absences.forEach(function(a) {
+    var key = a.name+'|'+(a.date_from||a.date)+'|'+(a.date_to||a.date)+'|'+a.session+'|'+a.reason;
+    if (!absGroups[key]) absGroups[key] = {a:a, dates:[]};
+    if (absGroups[key].dates.indexOf(a.date) === -1) absGroups[key].dates.push(a.date);
+  });
+
+  // Count free slots and hours ONLY from actual absence records in state
+  var freeSlotsCount = 0;
+  var hoursLost = 0;
+  absences.forEach(function(a) {
+    // Each absence record = one clinic-session slot freed
+    var sessions = a.session === 'all' ? ['morning','afternoon','evening'] : [a.session];
+    sessions.forEach(function(sv) {
+      freeSlotsCount += 1;
+      hoursLost += SESSION_HOURS[sv] || 0;
+    });
+  });
+  hoursLost = Math.round(hoursLost * 10) / 10;
+
+  // Count hours recovered ONLY from bookings that have a matching absence
+  // (booking date must have a corresponding absence for that clinic/session/date)
+  var hoursRecovered = 0;
+  var utilizedSlots = 0;
+  bookings.forEach(function(b) {
+    // Check if there is a real absence that freed this slot
+    var hasAbsence = absences.some(function(a) {
+      return a.date === b.date &&
+             (a.session === 'all' || a.session === b.session);
+    });
+    if (hasAbsence) {
+      utilizedSlots++;
+      var from = b.time_from ? parseInt(b.time_from.split(':')[0]) + parseInt(b.time_from.split(':')[1])/60 : 0;
+      var to   = b.time_to   ? parseInt(b.time_to.split(':')[0])   + parseInt(b.time_to.split(':')[1])/60   : 0;
+      hoursRecovered += Math.max(0, to - from);
+    }
+  });
+  hoursRecovered = Math.round(hoursRecovered * 10) / 10;
+
+  var utilPct      = freeSlotsCount > 0 ? Math.min(100, Math.round((utilizedSlots / freeSlotsCount) * 100)) : 0;
+  var hoursUtilPct = hoursLost > 0      ? Math.min(100, Math.round((hoursRecovered / hoursLost) * 100))     : 0;
+
+  // Render stat cards
+  var statsEl = document.getElementById('stats-cards');
+  statsEl.style.gridTemplateColumns = '1fr 1fr';
+  statsEl.innerHTML =
+    '<div class="stat-card"><div class="sv">'+SLOTS_PER_WEEK+'</div><div class="sl">Slots / week</div></div>' +
+    '<div class="stat-card"><div class="sv">'+HOURS_PER_WEEK+'h</div><div class="sl">Hours / week</div></div>' +
+    '<div class="stat-card"><div class="sv" style="color:#E53935;">'+freeSlotsCount+'</div><div class="sl">Free slots</div></div>' +
+    '<div class="stat-card"><div class="sv" style="color:#E53935;">'+hoursLost+'h</div><div class="sl">Hours lost</div></div>' +
+    '<div class="stat-card"><div class="sv" style="color:#43A047;">'+utilizedSlots+'</div><div class="sl">Bookings made</div></div>' +
+    '<div class="stat-card"><div class="sv" style="color:#43A047;">'+hoursRecovered+'h</div><div class="sl">Hours recovered</div></div>' +
+    '<div class="stat-card" style="grid-column:1/-1;">' +
+      '<div class="sv" style="font-size:20px;">Slot utilization: <span style="color:#43A047;">'+utilPct+'%</span> &nbsp;|&nbsp; Hour utilization: <span style="color:#1565C0;">'+hoursUtilPct+'%</span></div>' +
+      '<div class="sl">Based on '+freeSlotsCount+' free slots and '+hoursLost+'h lost from current absences only</div>' +
+    '</div>';
+
+  // Utilization bar
+  var barWrap = document.getElementById('util-bar-wrap');
+  barWrap.style.display = 'block';
+  setTimeout(function() {
+    document.getElementById('util-bar').style.width = hoursUtilPct + '%';
+    document.getElementById('util-label').textContent =
+      hoursRecovered + 'h recovered out of ' + hoursLost + 'h lost (' + hoursUtilPct + '%) — ' +
+      utilizedSlots + ' bookings out of ' + freeSlotsCount + ' free slots (' + utilPct + '%)';
+  }, 100);
+
+  // Build activity feed — absences grouped + all bookings
+  var feed = [];
+
+  // ABSENCES — grouped by unique event, colored RED
+  Object.values(absGroups).forEach(function(g) {
+    var a = g.a;
+    var from = new Date((a.date_from||a.date)+'T00:00:00');
+    var to = new Date((a.date_to||a.date)+'T00:00:00');
+    var sameDay = from.toDateString() === to.toDateString();
+    var fromStr = from.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    var toStr = to.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    var sessLabel = a.session==='all'?'All sessions':(SESS_FULL[a.session]||a.session);
+    var dateRange = sameDay ? fromStr : fromStr + ' → ' + toStr;
+    var daysCount = g.dates ? g.dates.length : 1;
+    feed.push({
+      type: 'absence',
+      date: a.date_from||a.date,
+      title: a.name + ' — ' + a.reason,
+      sub: dateRange + ' · ' + sessLabel + (daysCount > 1 ? ' · ' + daysCount + ' working days' : '')
+    });
+  });
+
+  // BOOKINGS — each booking entry, colored GREEN
+  bookings.forEach(function(b) {
+    var d = new Date(b.date+'T00:00:00');
+    var dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    var sessLabel = SESS_FULL[b.session]||b.session;
+    // Check if correlated with an absence
+    var hasAbsence = absences.some(function(a){
+      return a.date===b.date&&(a.session==='all'||a.session===b.session);
+    });
+    feed.push({
+      type: 'booking',
+      date: b.date,
+      correlated: hasAbsence,
+      title: b.doctor + ' booked ' + b.clinic,
+      sub: dateStr + ' · ' + sessLabel + ' · ' + b.time_from + ' to ' + b.time_to
+    });
+  });
+
+  // Sort by date descending then by type (absence first on same date)
+  feed.sort(function(a,b) {
+    if (b.date !== a.date) return b.date.localeCompare(a.date);
+    return a.type === 'absence' ? -1 : 1;
+  });
+
+  var feedEl = document.getElementById('log-feed');
+  if (!feed.length) {
+    feedEl.innerHTML = '<div class="empty-log">No activity recorded yet</div>';
+    return;
+  }
+
+  // Section headers by date
+  var html = '';
+  var lastDate = '';
+  feed.forEach(function(item) {
+    var d = new Date(item.date+'T00:00:00');
+    var dateHeader = d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    if (item.date !== lastDate) {
+      if (lastDate !== '') html += '</div>';
+      html += '<div style="font-size:11px;font-weight:700;color:#9E9E9E;text-transform:uppercase;letter-spacing:0.06em;padding:10px 0 5px;border-top:'+(lastDate?'1px solid #F0F0F0':'none')+';">'+dateHeader+'</div><div>';
+      lastDate = item.date;
+    }
+    if (item.type === 'absence') {
+      html += '<div class="log-item">' +
+        '<div class="log-dot absence" style="background:#E53935;width:12px;height:12px;"></div>' +
+        '<div class="log-text">' +
+          '<div class="log-title" style="color:#C62828;">&#128308; '+item.title+'</div>' +
+          '<div class="log-sub">'+item.sub+'</div>' +
+        '</div>' +
+      '</div>';
+    } else {
+      var corrBadge = item.correlated ?
+        '<span style="font-size:9px;background:#E8F5E9;color:#2E7D32;padding:1px 6px;border-radius:99px;margin-left:4px;font-weight:700;">Correlated</span>' :
+        '<span style="font-size:9px;background:#FFF3E0;color:#E65100;padding:1px 6px;border-radius:99px;margin-left:4px;font-weight:700;">No absence found</span>';
+      html += '<div class="log-item">' +
+        '<div class="log-dot booking" style="background:#43A047;width:12px;height:12px;"></div>' +
+        '<div class="log-text">' +
+          '<div class="log-title" style="color:#2E7D32;">&#128994; '+item.title+corrBadge+'</div>' +
+          '<div class="log-sub">'+item.sub+'</div>' +
+        '</div>' +
+      '</div>';
+    }
+  });
+  if (lastDate) html += '</div>';
+  feedEl.innerHTML = html;
+}
+
+function exportReport() {
+  var period = getPeriodDates();
+  var filterLabel = period.label;
+  var todayStr = new Date().toISOString().split('T')[0];
+
+  var absences = state.absences.filter(function(a){ return a.date>=period.from&&a.date<=period.to&&a.date<=todayStr; });
+  var bookings = state.bookings.filter(function(b){ return b.date>=period.from&&b.date<=period.to&&b.date<=todayStr; });
+
+  // Build CSV content
+  var csv = 'Dental and Maxillofacial Outpatient Clinics - Activity Report\n';
+  csv += 'Period: ' + filterLabel + '\n';
+  csv += 'Generated: ' + new Date().toLocaleDateString('en-GB') + '\n\n';
+
+  csv += 'ABSENCES\n';
+  csv += 'Name,Type,Date From,Date To,Session,Reason\n';
+  var absGroups = {};
+  absences.forEach(function(a){
+    var key = a.name+'|'+(a.date_from||a.date)+'|'+(a.date_to||a.date)+'|'+a.session+'|'+a.reason;
+    if(!absGroups[key]) absGroups[key]={a:a};
+  });
+  Object.values(absGroups).forEach(function(g){
+    var a=g.a;
+    csv += '"'+a.name+'","'+a.type+'","'+(a.date_from||a.date)+'","'+(a.date_to||a.date)+'","'+(SESS_FULL[a.session]||a.session)+'","'+a.reason+'"\n';
+  });
+
+  csv += '\nBOOKINGS\n';
+  csv += 'Doctor,Clinic,Date,Session,From,To\n';
+  bookings.forEach(function(b){
+    csv += '"'+b.doctor+'","'+b.clinic+'","'+b.date+'","'+(SESS_FULL[b.session]||b.session)+'","'+b.time_from+'","'+b.time_to+'"\n';
+  });
+
+  // Correlated export stats — same logic as renderLog
+  var sessHrs = {morning:4, afternoon:2.5, evening:2};
+  var freeSlotsExp = 0; var hoursLostExp = 0;
+  absences.forEach(function(a){
+    var sessions = a.session==='all'?['morning','afternoon','evening']:[a.session];
+    sessions.forEach(function(sv){ freeSlotsExp+=1; hoursLostExp+=(sessHrs[sv]||0); });
+  });
+  hoursLostExp = Math.round(hoursLostExp*10)/10;
+
+  var hoursRecExp = 0; var utilizedExp = 0;
+  bookings.forEach(function(b){
+    var hasAbs = absences.some(function(a){ return a.date===b.date&&(a.session==='all'||a.session===b.session); });
+    if(hasAbs){
+      utilizedExp++;
+      var from=b.time_from?parseInt(b.time_from.split(':')[0])+parseInt(b.time_from.split(':')[1])/60:0;
+      var to=b.time_to?parseInt(b.time_to.split(':')[0])+parseInt(b.time_to.split(':')[1])/60:0;
+      hoursRecExp+=Math.max(0,to-from);
+    }
+  });
+  hoursRecExp=Math.round(hoursRecExp*10)/10;
+  var utilExp = freeSlotsExp>0?Math.min(100,Math.round((utilizedExp/freeSlotsExp)*100)):0;
+  var hoursUtilExp = hoursLostExp>0?Math.min(100,Math.round((hoursRecExp/hoursLostExp)*100)):0;
+  var absGroupsExp = {};
+  absences.forEach(function(a){ var k=a.name+'|'+(a.date_from||a.date)+'|'+(a.date_to||a.date)+'|'+a.session+'|'+a.reason; if(!absGroupsExp[k]) absGroupsExp[k]=true; });
+  csv += '\nSUMMARY\n';
+  csv += 'Slots per week,51\n';
+  csv += 'Clinical hours per week,152h\n';
+  csv += 'Total absence events,' + Object.keys(absGroupsExp).length + '\n';
+  csv += 'Free slots created by absences,' + freeSlotsExp + '\n';
+  csv += 'Clinical hours lost,' + hoursLostExp + 'h\n';
+  csv += 'Correlated bookings made,' + utilizedExp + '\n';
+  csv += 'Clinical hours recovered,' + hoursRecExp + 'h\n';
+  csv += 'Slot utilization rate,' + utilExp + '%\n';
+  csv += 'Hour utilization rate,' + hoursUtilExp + '%\n';
+
+  // Download CSV
+  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'clinic-report-' + filter + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function toggleOther() {
+  var val = document.getElementById('abs-reason').value;
+  document.getElementById('other-box').style.display = val === 'other' ? 'block' : 'none';
+  if (val !== 'other') document.getElementById('abs-other').value = '';
+}
+
+function populateAbsStaff() {
+  var type = document.getElementById('abs-type').value;
+  var list = type === 'doctor' ? state.doctors.map(function(d) { return d.name; }) : state.assistants;
+  document.getElementById('abs-name').innerHTML = list.map(function(n) { return '<option>' + n + '</option>'; }).join('');
+}
+
+async function logAbsence() {
+  var type = document.getElementById('abs-type').value;
+  var name = document.getElementById('abs-name').value;
+  var dateFrom = document.getElementById('abs-date').value;
+  var dateTo = document.getElementById('abs-date-to').value || dateFrom;
+  var sess = document.getElementById('abs-session').value;
+  var rv = document.getElementById('abs-reason').value;
+  var other = document.getElementById('abs-other').value.trim();
+  if (!name || !dateFrom) { alert('Please fill in all fields.'); return; }
+  if (dateTo < dateFrom) { alert('End date must be same or after start date.'); return; }
+  if (rv === 'other' && !other) { alert('Please specify the reason.'); return; }
+  var reason = rv === 'other' ? other : rv;
+  var btn = document.getElementById('log-btn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+  var dates = [];
+  var cur = new Date(dateFrom + 'T00:00:00');
+  var end = new Date(dateTo + 'T00:00:00');
+  while (cur <= end) {
+    var day = cur.getDay();
+    if (day >= 0 && day <= 4) { dates.push(fmt(cur)); }
+    cur.setDate(cur.getDate() + 1);
+  }
+  for (var i = 0; i < dates.length; i++) {
+    var payload = {type:type, name:name, date:dates[i], session:sess, reason:reason, date_from:dateFrom, date_to:dateTo};
+    try {
+      var sv = await dbFetch('absences', {method:'POST', body:JSON.stringify(payload)});
+      if (sv && sv[0]) { sv[0].date_from = sv[0].date_from || dateFrom; sv[0].date_to = sv[0].date_to || dateTo; state.absences.push(sv[0]); }
+    } catch(e) {
+      state.absences.push({id:'L'+Date.now()+'_'+i, type:type, name:name, date:dates[i], session:sess, reason:reason, date_from:dateFrom, date_to:dateTo});
+    }
+  }
+  renderAbsenceList(); renderSchedule();
+  if (document.getElementById('panel-log').classList.contains('active')) { renderLog(); }
+  btn.textContent = '\u2713 Confirm absence'; btn.disabled = false;
+}
+
+async function deleteGroup(ids) {
+  if (!confirm('Remove this absence (all days)?')) return;
+  for (var i = 0; i < ids.length; i++) {
+    try { await dbFetch('absences?id=eq.' + ids[i], {method:'DELETE', headers:{'Prefer':''}}); } catch(e) {}
+  }
+  state.absences = state.absences.filter(function(a) { return ids.indexOf(a.id) === -1; });
+  renderAbsenceList();
+  renderSchedule();
+  // Refresh log if it's currently visible
+  if (document.getElementById('panel-log').classList.contains('active')) { renderLog(); }
+}
+
+function renderSchedule() {
+  var sun = getCurrentSunday();
+  var thu = new Date(sun.getTime()); thu.setDate(sun.getDate() + 4);
+  var wr = document.getElementById('week-range');
+  if (wr) {
+    wr.textContent = fmtDMY(sun) + '  →  ' + fmtDMY(thu);
+  }
+
+  // Sync dropdown
+  var wpk = document.getElementById('week-picker');
+  if (wpk) { wpk.value = weekOffset; }
+  var el = document.getElementById('schedule-view');
+  var html = '';
+  for (var di = 0; di < 5; di++) {
+    var date = new Date(sun.getTime()); date.setDate(sun.getDate() + di);
+    var ds = fmt(date);
+    var isThu = di === 4;
+    var sessions = isThu ? ['morning','afternoon'] : ['morning','afternoon','evening'];
+    var dateLabel = date.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    html += '<div class="day-block">';
+    html += '<div class="day-title"><span>' + DAYS[di] + '</span><span class="ddate">' + dateLabel + '</span></div>';
+    html += '<table class="sch-table"><thead><tr>';
+    html += '<th class="sess-th"' + (isThu ? ' style="background:#E6A817;"' : '') + '>-</th>';
+    for (var ci = 0; ci < CLINICS.length; ci++) {
+      html += '<th' + (isThu ? ' class="thu-th"' : '') + '>' + CLINICS[ci] + '</th>';
+    }
+    html += '</tr></thead><tbody>';
+    for (var si = 0; si < sessions.length; si++) {
+      var sv = sessions[si];
+      html += '<tr><td class="sess-td' + (isThu ? ' thu-sess' : '') + '">' + SESS_LABEL[sv] + '</td>';
+      for (var ci2 = 0; ci2 < CLINICS.length; ci2++) {
+        var cl = CLINICS[ci2];
+        var slot = state.schedule[sk(di, sv, cl)] || {};
+        var doc = slot.doctor || '';
+        var asst = slot.assistant || '';
+        if (doc === SRG) {
+          html += '<td><div class="dc dc-surgery">Surg.</div></td>';
+          continue;
+        }
+        if (!doc) {
+          html += '<td><div class="dc dc-empty">-</div></td>';
+          continue;
+        }
+        var docAbsent = isAbsent(doc, ds, sv);
+        var asstGone = isAsstGone(asst, ds, sv);
+        var sp = getSpec(doc);
+        var shortName = doc.replace(/\s*\(.*\)/g,'').replace('Dr. ','Dr.');
+        var noteMatch = doc.match(/\(([^)]+)\)/);
+        var noteHtml = noteMatch ? '<span class="sp-note">(' + noteMatch[1] + ')</span>' : '';
+        if (docAbsent && asstGone) {
+          var bookings = getBookings(di, sv, cl, ds);
+          var available = getAvailableTimes(sv, bookings);
+          var hasSpace = available.from.length > 0;
+          if (bookings.length > 0) {
+            var bookingLines = bookings.map(function(b){
+              return '<span class="booked-doc" onclick="event.stopPropagation();openCancelModal(\''+b.id+'\')" style="cursor:pointer;display:block;border-bottom:0.5px solid rgba(255,255,255,0.15);padding:1px 0;">'+b.doctor.replace('Dr. ','Dr.')+' '+b.time_from+'-'+b.time_to+'</span>';
+            }).join('');
+            var bookMoreBtn = hasSpace ? '<span onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+ds+'\',\''+shortName+'\',\''+sp+'\')" style="cursor:pointer;display:block;background:rgba(255,255,255,0.15);border-radius:4px;padding:2px 4px;margin-top:3px;font-size:9px;font-weight:700;">+ Book more time</span>' : '';
+            var topLabel = hasSpace ? 'PARTIAL' : 'FULLY BOOKED';
+            var bgStyle = hasSpace ? 'background:linear-gradient(135deg,#1565C0,#0D47A1)' : 'background:linear-gradient(135deg,#333,#111)';
+            html += '<td><div class="dc dc-booked" style="'+bgStyle+'"><span class="booked-top">'+topLabel+'</span>'+bookingLines+bookMoreBtn+'</div></td>';
+          } else {
+            html += '<td><div class="dc dc-free" onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+ds+'\',\''+shortName+'\',\''+sp+'\')"><span class="free-top">FREE &#128197;</span><span class="free-doc">' + shortName + '</span><span class="free-spec">' + (sp||'') + '</span></div></td>';
+          }
+        } else if (docAbsent) {
+          html += '<td><div class="dc dc-partial"><span class="doc-name">' + shortName + '</span><span class="part-tag">No doctor</span></div></td>';
+        } else if (asstGone) {
+          html += '<td><div class="dc dc-busy"><span class="doc-name ' + scls(sp) + '">' + shortName + '</span>' + noteHtml + '</div></td>';
+        } else {
+          html += '<td><div class="dc dc-busy"><span class="doc-name ' + scls(sp) + '">' + shortName + '</span>' + noteHtml + '</div></td>';
+        }
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table></div>';
+  }
+  el.innerHTML = html;
+}
+
+function renderAbsenceList() {
+  var el = document.getElementById('absence-list');
+  if (!state.absences.length) { el.innerHTML = '<div class="empty">No absences logged yet</div>'; return; }
+  var sorted = state.absences.slice().sort(function(a,b) { return (a.date_from||a.date).localeCompare(b.date_from||b.date); });
+  var grouped = {};
+  sorted.forEach(function(a) {
+    var key = a.name + '|' + (a.date_from||a.date) + '|' + (a.date_to||a.date) + '|' + a.session + '|' + a.reason;
+    if (!grouped[key]) { grouped[key] = {a:a, ids:[]}; }
+    grouped[key].ids.push(a.id);
+  });
+  var items = Object.values(grouped);
+  el.innerHTML = items.map(function(g) {
+    var a = g.a;
+    var sl = a.session === 'all' ? 'Full day' : (SESS_FULL[a.session] || a.session);
+    var from = new Date((a.date_from||a.date) + 'T00:00:00');
+    var to = new Date((a.date_to||a.date) + 'T00:00:00');
+    var sameDay = from.toDateString() === to.toDateString();
+    var fromStr = from.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    var toStr = to.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    var dateStr = sameDay ? fromStr : fromStr + ' to ' + toStr;
+    var ids = JSON.stringify(g.ids);
+    return '<div class="abs-item"><div class="ainfo"><span class="apill ' + (a.type==='doctor'?'pdoc':'passt') + '">' + (a.type==='doctor'?'Doctor':'Assistant') + '</span><div class="aname">' + a.name + '</div><div class="ameta">' + dateStr + ' - ' + sl + ' - ' + a.reason + '</div></div><button class="delbtn" data-ids="' + ids.replace(/"/g,'&quot;') + '">&times;</button></div>';
+  }).join('');
+  el.querySelectorAll('.delbtn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var ids = JSON.parse(this.getAttribute('data-ids').replace(/&quot;/g,'"'));
+      deleteGroup(ids);
+    });
+  });
+}
+
+function renderStaff() {
+  document.getElementById('doctor-list').innerHTML = state.doctors.map(function(d,i) {
+    return '<div class="stf-item"><div><div class="stf-name">' + d.name + '</div><span class="stf-spec" style="' + ss(d.spec) + '">' + d.spec + '</span></div><button class="rmbtn" onclick="removeDoctor(' + i + ')">&times;</button></div>';
+  }).join('');
+  document.getElementById('assistant-list').innerHTML = state.assistants.length ? state.assistants.map(function(n,i) {
+    return '<div class="chip">' + n + '<span class="x" onclick="removeAssistant(' + i + ')">&times;</span></div>';
+  }).join('') : '<div class="empty">None added</div>';
+}
+
+function addDoctor() {
+  var n = document.getElementById('new-doctor').value.trim();
+  var s = document.getElementById('new-doctor-spec').value.trim();
+  if (!n) return;
+  state.doctors.push({name:n, spec:s||'General'});
+  document.getElementById('new-doctor').value = '';
+  document.getElementById('new-doctor-spec').value = '';
+  renderStaff();
+}
+function removeDoctor(i) { if (confirm('Remove ' + state.doctors[i].name + '?')) { state.doctors.splice(i,1); renderStaff(); } }
+function addAssistant() { var inp = document.getElementById('new-assistant'); var n = inp.value.trim(); if (!n) return; state.assistants.push(n); inp.value = ''; renderStaff(); }
+function removeAssistant(i) { state.assistants.splice(i,1); renderStaff(); }
+
+var weekOffset = 0; // 0 = current week, -1 = last week, +1 = next week
+
+function fmtDMY(d) {
+  var dd = String(d.getDate()).padStart(2,'0');
+  var mm = String(d.getMonth()+1).padStart(2,'0');
+  var yyyy = d.getFullYear();
+  return dd + '/' + mm + '/' + yyyy;
+}
+
+function populateWeekPicker() {
+  var sel = document.getElementById('week-picker');
+  if (!sel) return;
+  sel.innerHTML = '';
+
+  var today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Always show: 6 months back + 18 months forward from today — auto-updates every visit
+  var thisSunday = new Date(today.getTime());
+  thisSunday.setDate(today.getDate() - today.getDay());
+
+  var startDate = new Date(thisSunday.getTime() - 26 * 7 * 24 * 60 * 60 * 1000); // ~6 months back
+  var endDate   = new Date(thisSunday.getTime() + 78 * 7 * 24 * 60 * 60 * 1000); // ~18 months forward
+
+  var cur = new Date(startDate.getTime());
+  while (cur <= endDate) {
+    var thu = new Date(cur.getTime() + 4 * 24 * 60 * 60 * 1000);
+    var diffMs = cur.getTime() - thisSunday.getTime();
+    var offset = Math.round(diffMs / (7 * 24 * 60 * 60 * 1000));
+    var isCurrentWeek = offset === 0;
+    var label = fmtDMY(cur) + ' → ' + fmtDMY(thu);
+    var opt = document.createElement('option');
+    opt.value = offset;
+    opt.textContent = isCurrentWeek ? ('★ ' + label + ' (This week)') : label;
+    sel.appendChild(opt);
+    cur = new Date(cur.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
+  sel.value = weekOffset;
+}
+
+function pickWeekFromSelect() {
+  var sel = document.getElementById('week-picker');
+  weekOffset = parseInt(sel.value);
+  renderSchedule();
+}
+
+function getCurrentSunday() {
+  var today = new Date();
+  var thisSunday = new Date(today.getTime());
+  thisSunday.setDate(today.getDate() - today.getDay()); // go to this week's Sunday
+  thisSunday.setHours(0,0,0,0);
+  var result = new Date(thisSunday.getTime() + weekOffset * 7 * 24 * 60 * 60 * 1000);
+  return result;
+}
+
+function goToThisWeek() {
+  weekOffset = 0;
+  populateWeekPicker();
+  renderSchedule();
+}
+
+function changeWeek(direction) {
+  weekOffset += direction;
+  renderSchedule();
+}
+
+// ── SESSION TIME RANGES ─────────────────────────────────────────
+var SESSION_TIMES = {
+  morning:   ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00'],
+  afternoon: ['13:00','13:30','14:00','14:30','15:00','15:30','16:00'],
+  evening:   ['16:00','16:30','17:00','17:30','18:00']
+};
+
+var currentBookingSlot = null;
+var currentCancelBooking = null;
+
+// ── LOAD BOOKINGS ─────────────────────────────────────────────
+async function loadBookings() {
+  try {
+    var data = await dbFetch('bookings?select=*&order=created_at.asc');
+    state.bookings = data || [];
+  } catch(e) {
+    state.bookings = [];
+  }
+}
+
+function getBookings(di, sv, cl, ds) {
+  return state.bookings.filter(function(b) {
+    return b.day === di && b.session === sv && b.clinic === cl && b.date === ds;
+  }).sort(function(a,b){ return a.time_from.localeCompare(b.time_from); });
+}
+
+function getBooking(di, sv, cl, ds) {
+  var all = getBookings(di, sv, cl, ds);
+  return all.length ? all[0] : null;
+}
+
+function getAvailableTimes(sv, existingBookings) {
+  var allTimes = SESSION_TIMES[sv] || SESSION_TIMES.morning;
+  if (!existingBookings.length) return {from: allTimes.slice(0,-1), to: allTimes.slice(1)};
+  var sessionEnd = allTimes[allTimes.length-1];
+  var lastEnd = allTimes[0];
+  var availableFrom = [];
+  var availableTo = [];
+  var sorted = existingBookings.slice().sort(function(a,b){ return a.time_from.localeCompare(b.time_from); });
+  sorted.forEach(function(r){
+    if(r.time_from > lastEnd) {
+      allTimes.filter(function(t){ return t >= lastEnd && t < r.time_from; }).forEach(function(t){ if(availableFrom.indexOf(t)===-1) availableFrom.push(t); });
+      allTimes.filter(function(t){ return t > lastEnd && t <= r.time_from; }).forEach(function(t){ if(availableTo.indexOf(t)===-1) availableTo.push(t); });
+    }
+    if(r.time_to > lastEnd) lastEnd = r.time_to;
+  });
+  if(lastEnd < sessionEnd) {
+    allTimes.filter(function(t){ return t >= lastEnd && t < sessionEnd; }).forEach(function(t){ if(availableFrom.indexOf(t)===-1) availableFrom.push(t); });
+    allTimes.filter(function(t){ return t > lastEnd && t <= sessionEnd; }).forEach(function(t){ if(availableTo.indexOf(t)===-1) availableTo.push(t); });
+  }
+  return {from: availableFrom, to: availableTo};
+}
+
+// ── OPEN BOOKING MODAL ────────────────────────────────────────
+function openBookingModal(di, sv, cl, ds, docName, spec) {
+  currentBookingSlot = {di:di, sv:sv, cl:cl, ds:ds, docName:docName, spec:spec};
+  var existingBookings = getBookings(di, sv, cl, ds);
+  var available = getAvailableTimes(sv, existingBookings);
+
+  if (!available.from.length || !available.to.length) {
+    alert('This clinic is fully booked for this session!');
+    return;
+  }
+
+  document.getElementById('modal-title').textContent = 'Book ' + cl;
+  var bookingNote = existingBookings.length ? ' — ' + existingBookings.length + ' booking(s) already, remaining time shown' : '';
+  document.getElementById('modal-sub').textContent = DAYS[di] + ' — ' + SESS_FULL[sv] + bookingNote;
+
+  var sel = document.getElementById('modal-doctor');
+  sel.innerHTML = state.doctors.map(function(d) {
+    return '<option value="' + d.name + '">' + d.name + ' (' + d.spec + ')</option>';
+  }).join('');
+
+  var fromSel = document.getElementById('modal-from');
+  var toSel = document.getElementById('modal-to');
+  fromSel.innerHTML = available.from.map(function(t) { return '<option>' + t + '</option>'; }).join('');
+  toSel.innerHTML = available.to.map(function(t) { return '<option>' + t + '</option>'; }).join('');
+  toSel.selectedIndex = toSel.options.length - 1;
+
+  document.getElementById('booking-modal').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.getElementById('booking-modal').classList.add('hidden');
+  currentBookingSlot = null;
+}
+
+// ── CONFIRM BOOKING ───────────────────────────────────────────
+async function confirmBooking() {
+  if (!currentBookingSlot) return;
+  var doctor = document.getElementById('modal-doctor').value;
+  var timeFrom = document.getElementById('modal-from').value;
+  var timeTo = document.getElementById('modal-to').value;
+  if (!timeFrom || !timeTo) { alert('Please select time.'); return; }
+  if (timeFrom >= timeTo) { alert('End time must be after start time.'); return; }
+
+  var slot = currentBookingSlot;
+  var payload = {
+    clinic: slot.cl,
+    day: slot.di,
+    session: slot.sv,
+    date: slot.ds,
+    doctor: doctor,
+    time_from: timeFrom,
+    time_to: timeTo
+  };
+
+  var btn = document.querySelector('.btn-book');
+  btn.textContent = 'Booking...'; btn.disabled = true;
+  try {
+    var result = await dbFetch('bookings', {method:'POST', body:JSON.stringify(payload)});
+    if (result && result[0]) {
+      state.bookings.push(result[0]);
+    } else {
+      // push locally if no result returned
+      state.bookings.push(Object.assign({id:'B'+Date.now()}, payload));
+    }
+  } catch(e) {
+    console.error('Booking error:', e.message);
+    // Save locally as fallback
+    state.bookings.push(Object.assign({id:'B'+Date.now()}, payload));
+    alert('Saved locally — check your connection.');
+  }
+  btn.textContent = '✓ Book this clinic'; btn.disabled = false;
+  closeModal();
+  renderSchedule();
+  if (document.getElementById('panel-log').classList.contains('active')) { renderLog(); }
+}
+
+// ── OPEN CANCEL MODAL ─────────────────────────────────────────
+function openCancelModal(bookingId) {
+  var booking = state.bookings.find(function(b) { return b.id === bookingId; });
+  if (!booking) return;
+  currentCancelBooking = booking;
+  document.getElementById('cancel-sub').textContent =
+    booking.clinic + ' - ' + DAYS[booking.day] + ' - ' + booking.time_from + ' to ' + booking.time_to + ' - Booked by ' + booking.doctor;
+  var sel = document.getElementById('cancel-doctor');
+  sel.innerHTML = state.doctors.map(function(d) {
+    return '<option value="' + d.name + '">' + d.name + '</option>';
+  }).join('');
+  sel.value = booking.doctor;
+  document.getElementById('cancel-modal').classList.remove('hidden');
+}
+
+function closeCancelModal() {
+  document.getElementById('cancel-modal').classList.add('hidden');
+  currentCancelBooking = null;
+}
+
+async function confirmCancel() {
+  if (!currentCancelBooking) return;
+  var selectedDoc = document.getElementById('cancel-doctor').value;
+  if (selectedDoc !== currentCancelBooking.doctor) {
+    alert('Only ' + currentCancelBooking.doctor + ' can cancel this booking.');
+    return;
+  }
+  try {
+    await dbFetch('bookings?id=eq.' + currentCancelBooking.id, {method:'DELETE', headers:{'Prefer':''}});
+  } catch(e) {}
+  state.bookings = state.bookings.filter(function(b) { return b.id !== currentCancelBooking.id; });
+  closeCancelModal();
+  renderSchedule();
+  // Refresh log if visible
+  if (document.getElementById('panel-log').classList.contains('active')) { renderLog(); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  loadSchedule();
+  populateAbsStaff();
+  weekOffset = 0;
+  populateWeekPicker();
+  renderSchedule();
+  Promise.all([loadAbsences(), loadBookings()]).then(function() {
+    renderSchedule();
+    renderAbsenceList();
+  });
+});
+</script>
+<div style="text-align:center;padding:20px 16px 100px;font-size:11px;color:#9E9E9E;line-height:1.8;">
+  <div style="margin-bottom:4px;">&#127981; Created by <strong style="color:#1565C0;">Dr. Ahmed Howaidi</strong></div>
+  <div>For inquiries please contact: <a href="tel:0566562177" style="color:#1565C0;font-weight:600;text-decoration:none;">&#128222; 0566562177</a></div>
+</div>
+</body>
+</html>
