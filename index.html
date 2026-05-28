@@ -36,6 +36,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lchip{display:flex;align-items:center;gap:4px;font-size:10px;color:#555;background:#fff;padding:4px 8px;border-radius:99px;box-shadow:0 1px 4px rgba(0,0,0,0.07);font-weight:500;}
 .lc{width:7px;height:7px;border-radius:50%;}
 .day-block{margin-bottom:12px;}
+.today-block>.day-title{background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;border-radius:10px 10px 0 0;}
+.today-block>.day-title .ddate{color:rgba(255,255,255,0.75);}
+.today-badge{display:inline-block;background:#42A5F5;color:#fff;font-size:9px;font-weight:900;letter-spacing:0.1em;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;}
 .day-title{font-size:13px;font-weight:800;color:#0D47A1;background:#fff;padding:7px 12px;border-radius:10px 10px 0 0;border-bottom:2px solid #BBDEFB;display:flex;align-items:center;justify-content:space-between;}
 .day-title .ddate{font-size:11px;font-weight:400;color:#888;}
 .sch-table{width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 10px 10px;overflow:hidden;box-shadow:var(--shadow);}
@@ -360,7 +363,7 @@ var state = {
     {name:'Dr. Fatima', spec:'Endodontist'},
     {name:'Dr. Sherif', spec:'Endodontist'},
     {name:'Dr. Nehal', spec:'Periodontist'},
-    {name:'Dr. Hewaidi', spec:'Restorative'},
+    {name:'Dr. Howaidi', spec:'Restorative'},
     {name:'Dr. Noran', spec:'Orthodontist'},
     {name:'Dr. Amira', spec:'Fixed Prosthodontist'},
     {name:'Dr. Iina', spec:'Orthodontist'},
@@ -385,28 +388,28 @@ function loadSchedule() {
   a(0,'morning','Clinic 3','Dr. Sherif (Consultation)','Ebtehal / Dana');
   a(0,'morning','Clinic 4','Dr. Nehal','Melani / Amani H');
   a(0,'afternoon','Clinic 1','Dr. Kariem','Dania / Amani T');
-  a(0,'afternoon','Clinic 2','Dr. Hewaidi','Adawiya / Kholood');
+  a(0,'afternoon','Clinic 2','Dr. Howaidi','Adawiya / Kholood');
   a(0,'afternoon','Clinic 3','Dr. Sherif (Consultation)','Ebtehal / Dana');
   a(0,'afternoon','Clinic 4','Dr. Noran','Melani / Amani H');
   a(0,'evening','Clinic 1','','');
-  a(0,'evening','Clinic 2','Dr. Hewaidi','Nojood');
+  a(0,'evening','Clinic 2','Dr. Howaidi','Nojood');
   a(0,'evening','Clinic 3','','');
   a(0,'evening','Clinic 4','Dr. Noran','Amani H');
   a(1,'morning','Clinic 1',SRG,'Ahlam / Amani T');
   a(1,'morning','Clinic 2','Dr. Sherif','Adawiya');
-  a(1,'morning','Clinic 3','Dr. Hewaidi (Consultation)','');
+  a(1,'morning','Clinic 3','Dr. Howaidi (Consultation)','');
   a(1,'morning','Clinic 4',SRG,'Amani H / Dana');
   a(1,'afternoon','Clinic 1',SRG,'Amani T / Ahlam');
   a(1,'afternoon','Clinic 2','Dr. Fatima','Adawiya / Kholood');
   a(1,'afternoon','Clinic 3','Dr. Nehal','Dana / Ebtehal');
   a(1,'afternoon','Clinic 4','Dr. Amira','Melani / Amani H');
-  a(1,'evening','Clinic 1','Dr. Nehal (Hygiene)','');
+  a(1,'evening','Clinic 1','','');
   a(1,'evening','Clinic 2','Dr. Fatima','Kholood');
   a(1,'evening','Clinic 3','Dr. Iina','Ebtehal');
   a(1,'evening','Clinic 4','Dr. Amira','Meelani');
   a(2,'morning','Clinic 1',SRG,'Ahlam');
   a(2,'morning','Clinic 2','Dr. Sherif','Adawiya / Kholood');
-  a(2,'morning','Clinic 3','Dr. Hewaidi','Ebtehal');
+  a(2,'morning','Clinic 3','Dr. Howaidi','Ebtehal');
   a(2,'morning','Clinic 4','Dr. Noran','Melani / Amani H');
   a(2,'afternoon','Clinic 1',SRG,'Ahlam / Amani T');
   a(2,'afternoon','Clinic 2','Dr. Wael','Adawiya / Kholood');
@@ -414,11 +417,11 @@ function loadSchedule() {
   a(2,'afternoon','Clinic 4','Dr. Mawadah','Melani / Amani H');
   a(2,'evening','Clinic 1','Dr. Kariem','');
   a(2,'evening','Clinic 2','Dr. Wael','Amani T');
-  a(2,'evening','Clinic 3','','');
+  a(2,'evening','Clinic 3','Dr. Nehal (Hygiene)','');
   a(2,'evening','Clinic 4','Dr. Mawadah','Dania');
   a(3,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
   a(3,'morning','Clinic 2','Dr. Fatima','Kholood');
-  a(3,'morning','Clinic 3','Dr. Hewaidi','Ebtehal / Dana');
+  a(3,'morning','Clinic 3','Dr. Howaidi','Ebtehal / Dana');
   a(3,'morning','Clinic 4','Dr. Amira','Melani / Amani H');
   a(3,'afternoon','Clinic 1','Dr. Kariem','Amani T / Dania');
   a(3,'afternoon','Clinic 2','Dr. Mohamed Alqarni','Adawiya / Kholood');
@@ -489,7 +492,7 @@ async function loadClosedPeriods() {
       date_from: '2026-05-25',
       date_to:   '2026-05-31',
       label:     'Eid Al Adha Holiday',
-      subtitle:  'Clinic is closed \u2014 \u0639\u064a\u062f \u0627\u0644\u0623\u0636\u062d\u0649 \u0627\u0644\u0645\u0628\u0627\u0631\u0643',
+      subtitle:  'Outpatient clinics are closed \u2014 \u0639\u064a\u062f \u0627\u0644\u0623\u0636\u062d\u0649 \u0627\u0644\u0645\u0628\u0627\u0631\u0643',
       icon:      '\uD83D\uDD4C'
     }
   ];
@@ -925,16 +928,22 @@ function renderSchedule() {
     var isThu = di === 4;
     var sessions = isThu ? ['morning','afternoon'] : ['morning','afternoon','evening'];
     var dateLabel = date.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-    html += '<div class="day-block">';
-    html += '<div class="day-title"><span>' + DAYS[di] + '</span><span class="ddate">' + dateLabel + '</span></div>';
+    var todayDs = fmt(new Date());
+    var isToday = ds === todayDs;
+    html += '<div class="day-block' + (isToday ? ' today-block' : '') + '">';
+    html += '<div class="day-title"><span>' + DAYS[di] + (isToday ? ' <span class="today-badge">TODAY</span>' : '') + '</span><span class="ddate">' + dateLabel + '</span></div>';
 
     // Check if this day falls in a closed period
     var closed = getClosedPeriod(ds);
     if (closed) {
-      html += '<div class="closed-period-block">';
+      var blockStyle = isToday ? 'background:linear-gradient(135deg,#1565C0,#0D47A1);box-shadow:0 6px 24px rgba(21,101,192,0.5);border:2px solid #42A5F5;' : '';
+      html += '<div class="closed-period-block" style="' + blockStyle + '">';
+      if (isToday) {
+        html += '<span style="display:inline-block;background:#42A5F5;color:#fff;font-size:10px;font-weight:900;letter-spacing:0.12em;padding:3px 10px;border-radius:99px;margin-bottom:10px;">📅 TODAY</span>';
+      }
       html += '<span class="closed-period-icon">' + (closed.icon || '\uD83D\uDD4C') + '</span>';
       html += '<span class="closed-period-title">' + (closed.label || 'Clinic Closed') + '</span>';
-      html += '<span class="closed-period-subtitle">' + (closed.subtitle || 'All clinics are closed') + '</span>';
+      html += '<span class="closed-period-subtitle">' + (closed.subtitle || 'Outpatient clinics are closed') + '</span>';
       html += '</div></div>';
       continue;
     }
