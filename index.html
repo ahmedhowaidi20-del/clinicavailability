@@ -59,10 +59,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .dc-partial .doc-name{color:#E65100;font-size:10px;display:block;}
 .dc-partial .part-tag{display:block;font-size:8px;color:#BF360C;font-weight:700;}
 .dc-busy .doc-name{font-size:11px;font-weight:600;}
-.closed-period-block{background:linear-gradient(135deg,#37474F,#263238);border-radius:10px;padding:22px 16px;margin:6px 2px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.18);}
+.closed-period-block{background:linear-gradient(135deg,#37474F,#263238);border-radius:10px;padding:22px 16px;margin:6px 2px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,0.18);cursor:pointer;transition:transform 0.15s,box-shadow 0.15s;}
+.closed-period-block:active{transform:scale(0.97);}
 .closed-period-icon{font-size:32px;display:block;margin-bottom:8px;}
 .closed-period-title{color:#fff;font-size:15px;font-weight:800;display:block;letter-spacing:0.02em;}
 .closed-period-subtitle{color:rgba(255,255,255,0.6);font-size:11px;display:block;margin-top:4px;}
+.eid-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.eid-modal-overlay.open{display:flex;}
+.eid-modal{background:linear-gradient(160deg,#1a237e,#006064);border-radius:22px;padding:36px 28px;text-align:center;max-width:320px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.5);animation:eidPop 0.35s cubic-bezier(0.34,1.56,0.64,1);}
+@keyframes eidPop{from{opacity:0;transform:scale(0.6);}to{opacity:1;transform:scale(1);}}
+.eid-modal-emojis{font-size:52px;display:block;margin-bottom:12px;animation:eidWiggle 1.2s ease-in-out infinite alternate;}
+@keyframes eidWiggle{from{transform:rotate(-6deg) scale(1);}to{transform:rotate(6deg) scale(1.08);}}
+.eid-modal-title{color:#FFD700;font-size:26px;font-weight:900;display:block;margin-bottom:6px;text-shadow:0 2px 8px rgba(0,0,0,0.4);}
+.eid-modal-arabic{color:rgba(255,255,255,0.85);font-size:16px;display:block;margin-bottom:20px;}
+.eid-modal-close{background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);border-radius:99px;padding:8px 28px;font-size:13px;font-weight:700;cursor:pointer;}
 .sp-note{font-size:8px;color:#9E9E9E;display:block;}
 .sp-prostho{color:#4527A0;}.sp-endo{color:#BF360C;}.sp-perio{color:#00695C;}
 .sp-resto{color:#1565C0;}.sp-ortho{color:#880E4F;}.sp-operative{color:#E65100;}
@@ -937,7 +947,7 @@ function renderSchedule() {
     var closed = getClosedPeriod(ds);
     if (closed) {
       var blockStyle = isToday ? 'background:linear-gradient(135deg,#1565C0,#0D47A1);box-shadow:0 6px 24px rgba(21,101,192,0.5);border:2px solid #42A5F5;' : '';
-      html += '<div class="closed-period-block" style="' + blockStyle + '">';
+      html += '<div class="closed-period-block" style="' + blockStyle + '" onclick="showEidGreeting()">';
       if (isToday) {
         html += '<span style="display:inline-block;background:#42A5F5;color:#fff;font-size:10px;font-weight:900;letter-spacing:0.12em;padding:3px 10px;border-radius:99px;margin-bottom:10px;">📅 TODAY</span>';
       }
@@ -1307,5 +1317,22 @@ document.addEventListener('DOMContentLoaded', function() {
   <div style="margin-bottom:4px;">&#127981; Created by <strong style="color:#1565C0;">Dr. Ahmed Howaidi</strong></div>
   <div>For inquiries please contact: <a href="tel:0566562177" style="color:#1565C0;font-weight:600;text-decoration:none;">&#128222; 0566562177</a></div>
 </div>
+<!-- Eid Greeting Modal -->
+<div class="eid-modal-overlay" id="eid-modal-overlay" onclick="closeEidGreeting()">
+  <div class="eid-modal" onclick="event.stopPropagation()">
+    <span class="eid-modal-emojis">🕋🐑</span>
+    <span class="eid-modal-title">Happy Eid Al Adha! 🌙</span>
+    <span class="eid-modal-arabic">عيد أضحى مبارك</span>
+    <button class="eid-modal-close" onclick="closeEidGreeting()">Close</button>
+  </div>
+</div>
+<script>
+function showEidGreeting() {
+  document.getElementById('eid-modal-overlay').classList.add('open');
+}
+function closeEidGreeting() {
+  document.getElementById('eid-modal-overlay').classList.remove('open');
+}
+</script>
 </body>
 </html>
