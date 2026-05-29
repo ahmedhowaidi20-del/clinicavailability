@@ -36,9 +36,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lchip{display:flex;align-items:center;gap:4px;font-size:10px;color:#555;background:#fff;padding:4px 8px;border-radius:99px;box-shadow:0 1px 4px rgba(0,0,0,0.07);font-weight:500;}
 .lc{width:7px;height:7px;border-radius:50%;}
 .day-block{margin-bottom:12px;}
-.today-block>.day-title{background:linear-gradient(135deg,#1565C0,#0D47A1);color:#fff;border-radius:10px 10px 0 0;}
+.weekend-block{background:rgba(0,0,0,0.04);border-radius:0 0 10px 10px;padding:14px;text-align:center;}
+.today-block>.weekend-block{background:rgba(0,137,123,0.08);border-radius:0 0 10px 10px;}
+.weekend-label{font-size:12px;color:#aaa;font-weight:500;}
+.today-block>.day-title{background:linear-gradient(135deg,#00897B,#00695C);color:#fff;border-radius:10px 10px 0 0;}
 .today-block>.day-title .ddate{color:rgba(255,255,255,0.75);}
-.today-badge{display:inline-block;background:#42A5F5;color:#fff;font-size:9px;font-weight:900;letter-spacing:0.1em;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+.today-badge{display:inline-block;background:#80CBC4;color:#004D40;font-size:9px;font-weight:900;letter-spacing:0.1em;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle;}
+.today-block .sch-table th{background:#00897B;}
+.today-block .sch-table th.sess-th{background:#00695C;}
 .day-title{font-size:13px;font-weight:800;color:#0D47A1;background:#fff;padding:7px 12px;border-radius:10px 10px 0 0;border-bottom:2px solid #BBDEFB;display:flex;align-items:center;justify-content:space-between;}
 .day-title .ddate{font-size:11px;font-weight:400;color:#888;}
 .sch-table{width:100%;border-collapse:collapse;background:#fff;border-radius:0 0 10px 10px;overflow:hidden;box-shadow:var(--shadow);}
@@ -347,7 +352,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 var SB_URL = 'https://efqhigakipvabbcspurq.supabase.co';
 var SB_KEY = 'sb_publishable_LszitImdN0859bqSCjwW9g__ocYqzPr';
 
-var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday'];
+var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 var SESS_LABEL = {morning:'AM', afternoon:'PM', evening:'Eve'};
 var SESS_FULL = {morning:'Morning 08:00-12:00', afternoon:'Afternoon 13:00-16:00', evening:'Evening 16:00-18:00'};
 var CLINICS = ['Clinic 1','Clinic 2','Clinic 3','Clinic 4'];
@@ -499,8 +504,8 @@ async function loadClosedPeriods() {
   // Hardcoded clinic closure periods — update here for future holidays
   state.closedPeriods = [
     {
-      date_from: '2026-05-25',
-      date_to:   '2026-05-31',
+      date_from: '2026-05-26',
+      date_to:   '2026-06-01',
       label:     'Eid Al Adha Holiday',
       subtitle:  'Outpatient clinics are closed \u2014 \u0639\u064a\u062f \u0627\u0644\u0623\u0636\u062d\u0649 \u0627\u0644\u0645\u0628\u0627\u0631\u0643',
       icon:      '\uD83D\uDD4C'
@@ -921,10 +926,10 @@ async function deleteGroup(ids) {
 
 function renderSchedule() {
   var sun = getCurrentSunday();
-  var thu = new Date(sun.getTime()); thu.setDate(sun.getDate() + 4);
+  var sat = new Date(sun.getTime()); sat.setDate(sun.getDate() + 6);
   var wr = document.getElementById('week-range');
   if (wr) {
-    wr.textContent = fmtDMY(sun) + '  →  ' + fmtDMY(thu);
+    wr.textContent = fmtDMY(sun) + '  →  ' + fmtDMY(sat);
   }
 
   // Sync dropdown
@@ -932,24 +937,33 @@ function renderSchedule() {
   if (wpk) { wpk.value = weekOffset; }
   var el = document.getElementById('schedule-view');
   var html = '';
-  for (var di = 0; di < 5; di++) {
+  for (var di = 0; di < 7; di++) {
     var date = new Date(sun.getTime()); date.setDate(sun.getDate() + di);
-    var ds = fmt(date);
+    var dsUTC = fmt(date);
+    var ds = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
     var isThu = di === 4;
+    var isWeekend = di === 5 || di === 6;
     var sessions = isThu ? ['morning','afternoon'] : ['morning','afternoon','evening'];
     var dateLabel = date.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
-    var todayDs = fmt(new Date());
+    var now = new Date();
+    var todayDs = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
     var isToday = ds === todayDs;
     html += '<div class="day-block' + (isToday ? ' today-block' : '') + '">';
     html += '<div class="day-title"><span>' + DAYS[di] + (isToday ? ' <span class="today-badge">TODAY</span>' : '') + '</span><span class="ddate">' + dateLabel + '</span></div>';
 
+    // Weekend — no clinics
+    if (isWeekend) {
+      html += '<div class="weekend-block"><span class="weekend-label">🌙 Weekend — No Clinics</span></div></div>';
+      continue;
+    }
+
     // Check if this day falls in a closed period
     var closed = getClosedPeriod(ds);
     if (closed) {
-      var blockStyle = isToday ? 'background:linear-gradient(135deg,#1565C0,#0D47A1);box-shadow:0 6px 24px rgba(21,101,192,0.5);border:2px solid #42A5F5;' : '';
+      var blockStyle = isToday ? 'background:linear-gradient(135deg,#00897B,#00695C);box-shadow:0 6px 24px rgba(0,137,123,0.5);border:2px solid #80CBC4;' : '';
       html += '<div class="closed-period-block" style="' + blockStyle + '" onclick="showEidGreeting()">';
       if (isToday) {
-        html += '<span style="display:inline-block;background:#42A5F5;color:#fff;font-size:10px;font-weight:900;letter-spacing:0.12em;padding:3px 10px;border-radius:99px;margin-bottom:10px;">📅 TODAY</span>';
+        html += '<span style="display:inline-block;background:#80CBC4;color:#004D40;font-size:10px;font-weight:900;letter-spacing:0.12em;padding:3px 10px;border-radius:99px;margin-bottom:10px;">📅 TODAY</span>';
       }
       html += '<span class="closed-period-icon">' + (closed.icon || '\uD83D\uDD4C') + '</span>';
       html += '<span class="closed-period-title">' + (closed.label || 'Clinic Closed') + '</span>';
@@ -980,26 +994,26 @@ function renderSchedule() {
           html += '<td><div class="dc dc-empty">-</div></td>';
           continue;
         }
-        var docAbsent = isAbsent(doc, ds, sv);
+        var docAbsent = isAbsent(doc, dsUTC, sv);
         var asstGone = isAsstGone(asst, ds, sv);
         var sp = getSpec(doc);
         var shortName = doc.replace(/\s*\(.*\)/g,'').replace('Dr. ','Dr.');
         var noteMatch = doc.match(/\(([^)]+)\)/);
         var noteHtml = noteMatch ? '<span class="sp-note">(' + noteMatch[1] + ')</span>' : '';
         if (docAbsent && asstGone) {
-          var bookings = getBookings(di, sv, cl, ds);
+          var bookings = getBookings(di, sv, cl, dsUTC);
           var available = getAvailableTimes(sv, bookings);
           var hasSpace = available.from.length > 0;
           if (bookings.length > 0) {
             var bookingLines = bookings.map(function(b){
               return '<span class="booked-doc" onclick="event.stopPropagation();openCancelModal(\''+b.id+'\')" style="cursor:pointer;display:block;border-bottom:0.5px solid rgba(255,255,255,0.15);padding:1px 0;">'+b.doctor.replace('Dr. ','Dr.')+' '+b.time_from+'-'+b.time_to+'</span>';
             }).join('');
-            var bookMoreBtn = hasSpace ? '<span onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+ds+'\',\''+shortName+'\',\''+sp+'\')" style="cursor:pointer;display:block;background:rgba(255,255,255,0.15);border-radius:4px;padding:2px 4px;margin-top:3px;font-size:9px;font-weight:700;">+ Book more time</span>' : '';
+            var bookMoreBtn = hasSpace ? '<span onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+dsUTC+'\',\''+shortName+'\',\''+sp+'\')" style="cursor:pointer;display:block;background:rgba(255,255,255,0.15);border-radius:4px;padding:2px 4px;margin-top:3px;font-size:9px;font-weight:700;">+ Book more time</span>' : '';
             var topLabel = hasSpace ? 'PARTIAL' : 'FULLY BOOKED';
             var bgStyle = hasSpace ? 'background:linear-gradient(135deg,#1565C0,#0D47A1)' : 'background:linear-gradient(135deg,#333,#111)';
             html += '<td><div class="dc dc-booked" style="'+bgStyle+'"><span class="booked-top">'+topLabel+'</span>'+bookingLines+bookMoreBtn+'</div></td>';
           } else {
-            html += '<td><div class="dc dc-free" onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+ds+'\',\''+shortName+'\',\''+sp+'\')"><span class="free-top">FREE &#128197;</span><span class="free-doc">' + shortName + '</span><span class="free-spec">' + (sp||'') + '</span></div></td>';
+            html += '<td><div class="dc dc-free" onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+dsUTC+'\',\''+shortName+'\',\''+sp+'\')"><span class="free-top">FREE &#128197;</span><span class="free-doc">' + shortName + '</span><span class="free-spec">' + (sp||'') + '</span></div></td>';
           }
         } else if (docAbsent) {
           html += '<td><div class="dc dc-partial"><span class="doc-name">' + shortName + '</span><span class="part-tag">No doctor</span></div></td>';
