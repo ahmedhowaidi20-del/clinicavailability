@@ -82,7 +82,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sp-prostho{color:#4527A0;}.sp-endo{color:#BF360C;}.sp-perio{color:#00695C;}
 .sp-resto{color:#1565C0;}.sp-ortho{color:#880E4F;}.sp-operative{color:#E65100;}
 .sp-special{color:#33691E;}.sp-fixed{color:#311B92;}
-.scard{background:#fff;border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);margin-bottom:10px;}
+.active-abs-item{padding:10px 0;border-bottom:1px solid #F0F0F0;font-size:13px;line-height:1.6;}
+.active-abs-item:last-child{border:none;}
+.active-abs-name{font-weight:800;color:#1565C0;}
+.active-abs-dates{color:#555;}
 .scard h2{font-size:14px;font-weight:700;margin-bottom:12px;}
 .field{margin-bottom:10px;}
 .field label{font-size:12px;font-weight:700;color:#555;display:block;margin-bottom:4px;}
@@ -188,6 +191,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
 <div id="panel-absence" class="panel">
   <div class="sptop"></div>
+  <div class="scard" id="active-absences-card">
+    <h2>🟡 Currently on Leave</h2>
+    <div id="active-absences-list"><div class="empty">No one is currently on leave</div></div>
+  </div>
+  <div class="scard" id="planned-absences-card">
+    <h2>📅 Planned Leave</h2>
+    <div id="planned-absences-list"><div class="empty">No planned leave scheduled</div></div>
+  </div>
   <div class="scard">
     <h2>&#128197; Log absence</h2>
     <div class="field">
@@ -1037,6 +1048,71 @@ function renderAbsenceList() {
     grouped[key].ids.push(a.id);
   });
   var items = Object.values(grouped);
+
+  // Render active absences card
+  var now = new Date();
+  var todayStr = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  var activeEl = document.getElementById('active-absences-list');
+  // Deduplicate by name+from+to
+  var activeSeen = {};
+  var activeItems = items.filter(function(g) {
+    var a = g.a;
+    var from = a.date_from || a.date;
+    var to = a.date_to || a.date;
+    var key = a.name + '|' + from + '|' + to;
+    if (activeSeen[key]) return false;
+    activeSeen[key] = true;
+    return todayStr >= from && todayStr <= to;
+  });
+  if (activeItems.length) {
+    activeEl.innerHTML = activeItems.map(function(g) {
+      var a = g.a;
+      var from = new Date((a.date_from||a.date) + 'T00:00:00');
+      var to = new Date((a.date_to||a.date) + 'T00:00:00');
+      var fromStr = from.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+      var toStr = to.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+      return '<div class="active-abs-item">' +
+        '<span class="active-abs-name">' + a.name + '</span> ' +
+        '<span class="active-abs-dates">on leave from <strong>' + fromStr + '</strong>, returns back on <strong>' + toStr + '</strong></span>' +
+        (a.reason ? ' <span style="color:#aaa;font-size:11px;">· ' + a.reason + '</span>' : '') +
+        '</div>';
+    }).join('');
+  } else {
+    activeEl.innerHTML = '<div class="empty">No one is currently on leave</div>';
+  }
+
+  // Render planned leave card
+  var plannedEl = document.getElementById('planned-absences-list');
+  var plannedSeen = {};
+  var plannedItems = items.filter(function(g) {
+    var a = g.a;
+    var from = a.date_from || a.date;
+    var to = a.date_to || a.date;
+    var key = a.name + '|' + from + '|' + to;
+    if (plannedSeen[key]) return false;
+    plannedSeen[key] = true;
+    return from > todayStr;
+  });
+  // Sort by start date
+  plannedItems.sort(function(a,b) { return (a.a.date_from||a.a.date).localeCompare(b.a.date_from||b.a.date); });
+  if (plannedItems.length) {
+    plannedEl.innerHTML = plannedItems.map(function(g) {
+      var a = g.a;
+      var from = new Date((a.date_from||a.date) + 'T00:00:00');
+      var to = new Date((a.date_to||a.date) + 'T00:00:00');
+      var fromStr = from.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+      var toStr = to.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+      return '<div class="active-abs-item">' +
+        '<span class="active-abs-name">' + a.name + '</span> ' +
+        '<span class="active-abs-dates">on leave from <strong>' + fromStr + '</strong>, returns back on <strong>' + toStr + '</strong></span>' +
+        (a.reason ? ' <span style="color:#aaa;font-size:11px;">· ' + a.reason + '</span>' : '') +
+        '</div>';
+    }).join('');
+  } else {
+    plannedEl.innerHTML = '<div class="empty">No planned leave scheduled</div>';
+  }
+
+  // Render full absence list
   el.innerHTML = items.map(function(g) {
     var a = g.a;
     var sl = a.session === 'all' ? 'Full day' : (SESS_FULL[a.session] || a.session);
