@@ -99,10 +99,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .pdoc{background:#E3F2FD;color:#1565C0;}.passt{background:#E8F5E9;color:#2E7D32;}
 .delbtn{width:36px;height:36px;border-radius:9px;border:none;background:#FFEBEE;color:#C62828;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
 .empty{text-align:center;padding:18px;color:#BDBDBD;font-size:13px;}
-.stf-item{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #F0F0F0;}
+.stf-item{display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid #F0F0F0;}
 .stf-item:last-child{border:none;}
 .stf-name{font-size:13px;font-weight:700;}
-.stf-spec{display:inline-block;font-size:10px;padding:2px 7px;border-radius:99px;margin-top:2px;font-weight:600;}
+.spec-group{margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid #F0F0F0;}
+.spec-group-title{font-size:10px;font-weight:800;padding:5px 10px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid rgba(0,0,0,0.06);}
 .rmbtn{width:32px;height:32px;border-radius:8px;border:none;background:#FFEBEE;color:#C62828;font-size:17px;cursor:pointer;font-weight:700;}
 .add-row{display:flex;gap:6px;margin-top:10px;align-items:center;}
 .add-row input{flex:1;padding:11px;border-radius:10px;border:1.5px solid #E0E0E0;background:#F8F9FA;font-size:13px;font-family:inherit;outline:none;}
@@ -243,11 +244,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <div class="scard">
     <h2>&#128104;&#8205;&#9877; Doctors</h2>
     <div id="doctor-list"></div>
-    <div class="add-row">
-      <input type="text" id="new-doctor" placeholder="Dr. Name">
-      <input type="text" id="new-doctor-spec" placeholder="Specialty">
-      <button class="addbtn" onclick="addDoctor()">+ Add</button>
-    </div>
   </div>
 
 </div>
@@ -1062,11 +1058,24 @@ function renderAbsenceList() {
 }
 
 function renderStaff() {
-  document.getElementById('doctor-list').innerHTML = state.doctors.map(function(d,i) {
-    return '<div class="stf-item"><div><div class="stf-name">' + d.name + '</div><span class="stf-spec" style="' + ss(d.spec) + '">' + d.spec + '</span></div><button class="rmbtn" onclick="removeDoctor(' + i + ')">&times;</button></div>';
-  }).join('');
-  document.getElementById('assistant-list').innerHTML = state.assistants.length ? state.assistants.map(function(n,i) {
-    return '<div class="chip">' + n + '<span class="x" onclick="removeAssistant(' + i + ')">&times;</span></div>';
+  // Group doctors by specialty
+  var groups = {};
+  state.doctors.forEach(function(d) {
+    if (!groups[d.spec]) groups[d.spec] = [];
+    groups[d.spec].push(d);
+  });
+  var html = '';
+  Object.keys(groups).forEach(function(spec) {
+    html += '<div class="spec-group">';
+    html += '<div class="spec-group-title" style="' + ss(spec) + '">' + spec + '</div>';
+    groups[spec].forEach(function(d) {
+      html += '<div class="stf-item"><div class="stf-name">' + d.name + '</div></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('doctor-list').innerHTML = html;
+  document.getElementById('assistant-list').innerHTML = state.assistants.length ? state.assistants.map(function(n) {
+    return '<div class="chip">' + n + '</div>';
   }).join('') : '<div class="empty">None added</div>';
 }
 
