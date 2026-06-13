@@ -159,6 +159,47 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </style>
 </head>
 <body>
+<!-- ==== PASSCODE GATE (client-side, weak — public deterrent only) ==== -->
+<div id="pcGate" style="position:fixed;inset:0;z-index:999999;background:#0f172a;display:flex;align-items:center;justify-content:center;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;">
+  <div style="background:#fff;padding:28px 24px;border-radius:16px;box-shadow:0 10px 40px rgba(0,0,0,.3);width:min(90vw,340px);text-align:center;">
+    <h2 style="margin:0 0 6px;font-size:20px;color:#0f172a;">Clinic Availability</h2>
+    <p style="margin:0 0 18px;font-size:13px;color:#64748b;">Staff access only. Enter passcode.</p>
+    <input id="pcInput" type="password" inputmode="numeric" autocomplete="off" placeholder="Passcode"
+      style="width:100%;box-sizing:border-box;padding:12px 14px;font-size:16px;border:1px solid #cbd5e1;border-radius:10px;margin-bottom:10px;text-align:center;" />
+    <div id="pcErr" style="display:none;color:#dc2626;font-size:12px;margin-bottom:10px;">Incorrect passcode.</div>
+    <button id="pcBtn" style="width:100%;padding:12px;font-size:15px;font-weight:600;color:#fff;background:#2563eb;border:none;border-radius:10px;cursor:pointer;">Unlock</button>
+  </div>
+</div>
+<script>
+(function(){
+  var GATE_HASH = "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5";
+  var KEY = "clinicGateOk_v1";
+  async function sha256(s){
+    var b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,"0");}).join("");
+  }
+  function unlock(){ var g=document.getElementById("pcGate"); if(g) g.remove(); }
+  function shake(){ var e=document.getElementById("pcErr"); if(e) e.style.display="block"; }
+  // already unlocked on this device?
+  try { if (localStorage.getItem(KEY) === "1") { unlock(); return; } } catch(e){}
+  function setup(){
+    var btn=document.getElementById("pcBtn"), inp=document.getElementById("pcInput");
+    if(!btn||!inp) return;
+    inp.focus();
+    async function attempt(){
+      var h = await sha256(inp.value.trim());
+      if (h === GATE_HASH){ try{ localStorage.setItem(KEY,"1"); }catch(e){} unlock(); }
+      else { shake(); inp.value=""; inp.focus(); }
+    }
+    btn.addEventListener("click", attempt);
+    inp.addEventListener("keydown", function(ev){ if(ev.key==="Enter") attempt(); });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", setup);
+  else setup();
+})();
+</script>
+<!-- ==== END PASSCODE GATE ==== -->
+
 
 <div class="header">
   <div class="hicon" style="background:transparent;padding:0;overflow:hidden;"><img src="icon-192.png" style="width:38px;height:38px;border-radius:10px;object-fit:cover;display:block;"></div>
