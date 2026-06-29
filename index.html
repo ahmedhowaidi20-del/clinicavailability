@@ -431,7 +431,8 @@ var state = {
     {name:'Dr. Iina', spec:'Orthodontist'},
     {name:'Dr. Wael', spec:'Operative'},
     {name:'Dr. Mawadah', spec:'Orthodontist'},
-    {name:'Dr. Mohamed Alqarni', spec:'Special Needs'}
+    {name:'Dr. Mohamed Alqarni', spec:'Special Needs'},
+    {name:'Dr. Sherif', spec:'Endodontist'} // kept for historical records before 2026-06-27 only
   ],
   assistants: ['Dania','Amani T','Ahlam','Kholood','Adawiya','Nojood','Ebtehal','Dana','Melani','Amani H','Monerah','Meelani'],
   absences: [],
@@ -930,7 +931,7 @@ function toggleOther() {
 
 function populateAbsStaff() {
   var type = document.getElementById('abs-type').value;
-  var list = type === 'doctor' ? state.doctors.map(function(d) { return d.name; }) : state.assistants;
+  var list = type === 'doctor' ? state.doctors.filter(function(d){ return d.name !== 'Dr. Sherif'; }).map(function(d) { return d.name; }) : state.assistants;
   document.getElementById('abs-name').innerHTML = list.map(function(n) { return '<option>' + n + '</option>'; }).join('');
 }
 
@@ -1047,6 +1048,13 @@ function renderSchedule() {
         if (doc === SRG) {
           html += '<td><div class="dc dc-surgery">Surg.</div></td>';
           continue;
+        }
+        // Dr. Sherif's open-slot replacement only applies from 27-06-2026 onward
+        // (his last working day was 26-06-2026). Before that date, restore his original assignment.
+        var SHERIF_LEAVE_EFFECTIVE = '2026-06-27';
+        if (doc === 'OPEN_SLOT' && dsUTC < SHERIF_LEAVE_EFFECTIVE) {
+          if (di === 1 && sv === 'morning' && cl === 'Clinic 2') { doc = 'Dr. Sherif'; }
+          if (di === 2 && sv === 'morning' && cl === 'Clinic 2') { doc = 'Dr. Sherif'; }
         }
         if (doc === 'OPEN_SLOT') {
           var bookingsOpen = getBookings(di, sv, cl, dsUTC);
@@ -1202,9 +1210,9 @@ function renderAbsenceList() {
 }
 
 function renderStaff() {
-  // Group doctors by specialty
+  // Group doctors by specialty (excluding former staff kept only for historical schedule records)
   var groups = {};
-  state.doctors.forEach(function(d) {
+  state.doctors.filter(function(d){ return d.name !== 'Dr. Sherif'; }).forEach(function(d) {
     if (!groups[d.spec]) groups[d.spec] = [];
     groups[d.spec].push(d);
   });
@@ -1371,7 +1379,7 @@ function openBookingModal(di, sv, cl, ds, docName, spec) {
   document.getElementById('modal-sub').textContent = DAYS[di] + ' — ' + SESS_FULL[sv] + bookingNote;
 
   var sel = document.getElementById('modal-doctor');
-  sel.innerHTML = state.doctors.map(function(d) {
+  sel.innerHTML = state.doctors.filter(function(d){ return d.name !== 'Dr. Sherif'; }).map(function(d) {
     return '<option value="' + d.name + '">' + d.name + ' (' + d.spec + ')</option>';
   }).join('');
 
