@@ -688,7 +688,25 @@ function renderLog() {
     if (absGroups[key].dates.indexOf(a.date) === -1) absGroups[key].dates.push(a.date);
   });
 
-  // Count free slots and hours ONLY from actual absence records in state
+  // ── OPEN_SLOT synthetic free-slot generation ──────────────────
+  // Dr. Sherif's old slot (Mon/Tue AM Clinic 2) has had no doctor assigned since 2026-06-27.
+  // Every past Monday/Tuesday in the selected period counts as a lost free slot by default,
+  // exactly like an absence would, even though there's no absence record for it.
+  var SHERIF_LEAVE_EFFECTIVE = '2026-06-27';
+  var openSlotEvents = []; // {date, session:'morning'}
+  (function generateOpenSlots() {
+    var d = new Date(Math.max(new Date(period.from+'T00:00:00').getTime(), new Date(SHERIF_LEAVE_EFFECTIVE+'T00:00:00').getTime()));
+    var end = new Date(Math.min(new Date(period.to+'T00:00:00').getTime(), new Date(todayStr+'T00:00:00').getTime()));
+    while (d <= end) {
+      var wd = d.getDay(); // 0=Sun ... 1=Mon, 2=Tue
+      if (wd === 1 || wd === 2) {
+        openSlotEvents.push({date: fmt(d), session: 'morning'});
+      }
+      d.setDate(d.getDate() + 1);
+    }
+  })();
+
+  // Count free slots and hours from absence records + synthetic open-slot events
   var freeSlotsCount = 0;
   var hoursLost = 0;
   absences.forEach(function(a) {
@@ -699,19 +717,23 @@ function renderLog() {
       hoursLost += SESSION_HOURS[sv] || 0;
     });
   });
+  openSlotEvents.forEach(function(o) {
+    freeSlotsCount += 1;
+    hoursLost += SESSION_HOURS[o.session] || 0;
+  });
   hoursLost = Math.round(hoursLost * 10) / 10;
 
-  // Count hours recovered ONLY from bookings that have a matching absence
-  // (booking date must have a corresponding absence for that clinic/session/date)
+  // Count hours recovered from bookings that match EITHER a real absence OR an open-slot event
   var hoursRecovered = 0;
   var utilizedSlots = 0;
   bookings.forEach(function(b) {
-    // Check if there is a real absence that freed this slot
     var hasAbsence = absences.some(function(a) {
-      return a.date === b.date &&
-             (a.session === 'all' || a.session === b.session);
+      return a.date === b.date && (a.session === 'all' || a.session === b.session);
     });
-    if (hasAbsence) {
+    var hasOpenSlot = openSlotEvents.some(function(o) {
+      return o.date === b.date && o.session === b.session;
+    });
+    if (hasAbsence || hasOpenSlot) {
       utilizedSlots++;
       var from = b.time_from ? parseInt(b.time_from.split(':')[0]) + parseInt(b.time_from.split(':')[1])/60 : 0;
       var to   = b.time_to   ? parseInt(b.time_to.split(':')[0])   + parseInt(b.time_to.split(':')[1])/60   : 0;
@@ -735,7 +757,7 @@ function renderLog() {
     '<div class="stat-card"><div class="sv" style="color:#43A047;">'+hoursRecovered+'h</div><div class="sl">Hours recovered</div></div>' +
     '<div class="stat-card" style="grid-column:1/-1;">' +
       '<div class="sv" style="font-size:20px;">Slot utilization: <span style="color:#43A047;">'+utilPct+'%</span> &nbsp;|&nbsp; Hour utilization: <span style="color:#1565C0;">'+hoursUtilPct+'%</span></div>' +
-      '<div class="sl">Based on '+freeSlotsCount+' free slots and '+hoursLost+'h lost from current absences only</div>' +
+      '<div class="sl">Based on '+freeSlotsCount+' free slots and '+hoursLost+'h lost from absences + unstaffed open slots</div>' +
     '</div>';
 
   // Utilization bar
@@ -748,7 +770,7 @@ function renderLog() {
       utilizedSlots + ' bookings out of ' + freeSlotsCount + ' free slots (' + utilPct + '%)';
   }, 100);
 
-  // Build activity feed — absences grouped + all bookings
+  // Build activity feed — absences grouped + open-slot days + all bookings
   var feed = [];
 
   // ABSENCES — grouped by unique event, colored RED
@@ -770,19 +792,36 @@ function renderLog() {
     });
   });
 
+  // OPEN-SLOT DAYS — unstaffed Clinic 2 Mon/Tue mornings, colored ORANGE, only if NOT booked
+  openSlotEvents.forEach(function(o) {
+    var wasBooked = bookings.some(function(b) { return b.date === o.date && b.session === o.session && b.clinic === 'Clinic 2'; });
+    if (wasBooked) return; // don't show as "lost" if it was actually booked — the booking entry covers it
+    var d = new Date(o.date+'T00:00:00');
+    var dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    feed.push({
+      type: 'openslot',
+      date: o.date,
+      title: 'Clinic 2 — unstaffed, not utilized',
+      sub: dateStr + ' · ' + SESS_FULL[o.session] + ' · No doctor assigned (since Dr. Sherif\u2019s departure)'
+    });
+  });
+
   // BOOKINGS — each booking entry, colored GREEN
   bookings.forEach(function(b) {
     var d = new Date(b.date+'T00:00:00');
     var dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
     var sessLabel = SESS_FULL[b.session]||b.session;
-    // Check if correlated with an absence
+    // Check if correlated with an absence OR an open slot (e.g. Dr. Sherif's old slot)
     var hasAbsence = absences.some(function(a){
       return a.date===b.date&&(a.session==='all'||a.session===b.session);
+    });
+    var hasOpenSlot = openSlotEvents.some(function(o){
+      return o.date===b.date && o.session===b.session;
     });
     feed.push({
       type: 'booking',
       date: b.date,
-      correlated: hasAbsence,
+      correlated: hasAbsence || hasOpenSlot,
       title: b.doctor + ' booked ' + b.clinic,
       sub: dateStr + ' · ' + sessLabel + ' · ' + b.time_from + ' to ' + b.time_to
     });
@@ -816,6 +855,14 @@ function renderLog() {
         '<div class="log-dot absence" style="background:#E53935;width:12px;height:12px;"></div>' +
         '<div class="log-text">' +
           '<div class="log-title" style="color:#C62828;">&#128308; '+item.title+'</div>' +
+          '<div class="log-sub">'+item.sub+'</div>' +
+        '</div>' +
+      '</div>';
+    } else if (item.type === 'openslot') {
+      html += '<div class="log-item">' +
+        '<div class="log-dot" style="background:#FB8C00;width:12px;height:12px;"></div>' +
+        '<div class="log-text">' +
+          '<div class="log-title" style="color:#E65100;">&#128992; '+item.title+'</div>' +
           '<div class="log-sub">'+item.sub+'</div>' +
         '</div>' +
       '</div>';
@@ -870,6 +917,26 @@ function exportReport() {
     csv += '"'+csvSafe(b.doctor)+'","'+csvSafe(b.clinic)+'","'+csvSafe(b.date)+'","'+csvSafe(SESS_FULL[b.session]||b.session)+'","'+csvSafe(b.time_from)+'","'+csvSafe(b.time_to)+'"\n';
   });
 
+  // Generate the same OPEN_SLOT synthetic events used in renderLog (Dr. Sherif's old Mon/Tue AM Clinic 2 slot)
+  var SHERIF_LEAVE_EFFECTIVE_EXP = '2026-06-27';
+  var openSlotEventsExp = [];
+  (function(){
+    var d = new Date(Math.max(new Date(period.from+'T00:00:00').getTime(), new Date(SHERIF_LEAVE_EFFECTIVE_EXP+'T00:00:00').getTime()));
+    var end = new Date(Math.min(new Date(period.to+'T00:00:00').getTime(), new Date(todayStr+'T00:00:00').getTime()));
+    while (d <= end) {
+      var wd = d.getDay();
+      if (wd === 1 || wd === 2) { openSlotEventsExp.push({date: d.toISOString().split('T')[0], session: 'morning'}); }
+      d.setDate(d.getDate() + 1);
+    }
+  })();
+
+  csv += '\nUNSTAFFED OPEN SLOTS (Clinic 2, Mon/Tue AM, since Dr. Sherif departure)\n';
+  csv += 'Date,Session,Status\n';
+  openSlotEventsExp.forEach(function(o){
+    var wasBooked = bookings.some(function(b){ return b.date===o.date && b.session===o.session && b.clinic==='Clinic 2'; });
+    csv += '"'+csvSafe(o.date)+'","'+csvSafe(SESS_FULL[o.session]||o.session)+'","'+(wasBooked?'Booked':'Not utilized')+'"\n';
+  });
+
   // Correlated export stats — same logic as renderLog
   var sessHrs = {morning:4, afternoon:2.5, evening:2};
   var freeSlotsExp = 0; var hoursLostExp = 0;
@@ -877,12 +944,14 @@ function exportReport() {
     var sessions = a.session==='all'?['morning','afternoon','evening']:[a.session||'morning'];
     sessions.forEach(function(sv){ freeSlotsExp+=1; hoursLostExp+=(sessHrs[sv]||0); });
   });
+  openSlotEventsExp.forEach(function(o){ freeSlotsExp+=1; hoursLostExp+=(sessHrs[o.session]||0); });
   hoursLostExp = Math.round(hoursLostExp*10)/10;
 
   var hoursRecExp = 0; var utilizedExp = 0;
   bookings.forEach(function(b){
     var hasAbs = absences.some(function(a){ return a.date===b.date&&(a.session==='all'||a.session===b.session); });
-    if(hasAbs){
+    var hasOpenExp = openSlotEventsExp.some(function(o){ return o.date===b.date && o.session===b.session; });
+    if(hasAbs || hasOpenExp){
       utilizedExp++;
       var fromParts = (b.time_from||'0:0').split(':');
       var toParts = (b.time_to||'0:0').split(':');
@@ -900,7 +969,7 @@ function exportReport() {
   csv += 'Slots per week,51\n';
   csv += 'Clinical hours per week,152h\n';
   csv += 'Total absence events,' + Object.keys(absGroupsExp).length + '\n';
-  csv += 'Free slots created by absences,' + freeSlotsExp + '\n';
+  csv += 'Free slots (absences + unstaffed open slots),' + freeSlotsExp + '\n';
   csv += 'Clinical hours lost,' + hoursLostExp + 'h\n';
   csv += 'Correlated bookings made,' + utilizedExp + '\n';
   csv += 'Clinical hours recovered,' + hoursRecExp + 'h\n';
