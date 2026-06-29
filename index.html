@@ -424,7 +424,6 @@ var state = {
   doctors: [
     {name:'Dr. Kariem', spec:'Prosthodontist'},
     {name:'Dr. Fatima', spec:'Endodontist'},
-    {name:'Dr. Sherif', spec:'Endodontist'},
     {name:'Dr. Nehal', spec:'Periodontist'},
     {name:'Dr. Howaidi', spec:'Restorative'},
     {name:'Dr. Noran', spec:'Orthodontist'},
@@ -448,18 +447,18 @@ function loadSchedule() {
   function a(d,s,c,doc,asst) { S[sk(d,s,c)] = {doctor:doc||'', assistant:asst||''}; }
   a(0,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
   a(0,'morning','Clinic 2','Dr. Fatima','Kholood / Adawiya');
-  a(0,'morning','Clinic 3','Dr. Sherif (Consultation)','Ebtehal / Dana');
+  a(0,'morning','Clinic 3','Dr. Iina (Consultation)','Ebtehal / Dana');
   a(0,'morning','Clinic 4','Dr. Nehal','Melani / Amani H');
   a(0,'afternoon','Clinic 1','Dr. Kariem','Dania / Amani T');
   a(0,'afternoon','Clinic 2','Dr. Howaidi','Adawiya / Kholood');
-  a(0,'afternoon','Clinic 3','Dr. Sherif (Consultation)','Ebtehal / Dana');
+  a(0,'afternoon','Clinic 3','Dr. Mawadah (Consultation)','Ebtehal / Dana');
   a(0,'afternoon','Clinic 4','Dr. Noran','Melani / Amani H');
   a(0,'evening','Clinic 1','','');
   a(0,'evening','Clinic 2','Dr. Howaidi','Nojood');
   a(0,'evening','Clinic 3','','');
   a(0,'evening','Clinic 4','Dr. Noran','Amani H');
   a(1,'morning','Clinic 1',SRG,'Ahlam / Amani T');
-  a(1,'morning','Clinic 2','Dr. Sherif','Adawiya');
+  a(1,'morning','Clinic 2','OPEN_SLOT','Adawiya');
   a(1,'morning','Clinic 3','Dr. Howaidi (Consultation)','');
   a(1,'morning','Clinic 4',SRG,'Amani H / Dana');
   a(1,'afternoon','Clinic 1',SRG,'Amani T / Ahlam');
@@ -471,7 +470,7 @@ function loadSchedule() {
   a(1,'evening','Clinic 3','Dr. Iina','Ebtehal');
   a(1,'evening','Clinic 4','Dr. Amira','Meelani');
   a(2,'morning','Clinic 1',SRG,'Ahlam');
-  a(2,'morning','Clinic 2','Dr. Sherif','Adawiya / Kholood');
+  a(2,'morning','Clinic 2','OPEN_SLOT','Adawiya / Kholood');
   a(2,'morning','Clinic 3','Dr. Howaidi','Ebtehal');
   a(2,'morning','Clinic 4','Dr. Noran','Melani / Amani H');
   a(2,'afternoon','Clinic 1',SRG,'Ahlam / Amani T');
@@ -491,7 +490,7 @@ function loadSchedule() {
   a(3,'afternoon','Clinic 3','Dr. Nehal','Ebtehal / Dana');
   a(3,'afternoon','Clinic 4','Dr. Amira','Amani H / Melani');
   a(3,'evening','Clinic 1','','');
-  a(3,'evening','Clinic 2','Dr. Sherif','Adawiya');
+  a(3,'evening','Clinic 2','','');
   a(3,'evening','Clinic 3','Dr. Nehal','Monerah');
   a(3,'evening','Clinic 4','','');
   a(4,'morning','Clinic 1',SRG,'Amani T / Ahlam');
@@ -837,12 +836,15 @@ function renderLog() {
 }
 
 function exportReport() {
+ try {
   var period = getPeriodDates();
   var filterLabel = period.label;
   var todayStr = new Date().toISOString().split('T')[0];
 
-  var absences = state.absences.filter(function(a){ return a.date>=period.from&&a.date<=period.to&&a.date<=todayStr; });
-  var bookings = state.bookings.filter(function(b){ return b.date>=period.from&&b.date<=period.to&&b.date<=todayStr; });
+  var absences = (state.absences || []).filter(function(a){ return a && a.date>=period.from && a.date<=period.to && a.date<=todayStr; });
+  var bookings = (state.bookings || []).filter(function(b){ return b && b.date>=period.from && b.date<=period.to && b.date<=todayStr; });
+
+  function csvSafe(v){ return (v===undefined||v===null) ? '' : String(v); }
 
   // Build CSV content
   var csv = 'Dental and Maxillofacial Outpatient Clinics - Activity Report\n';
@@ -853,25 +855,25 @@ function exportReport() {
   csv += 'Name,Type,Date From,Date To,Session,Reason\n';
   var absGroups = {};
   absences.forEach(function(a){
-    var key = a.name+'|'+(a.date_from||a.date)+'|'+(a.date_to||a.date)+'|'+a.session+'|'+a.reason;
+    var key = csvSafe(a.name)+'|'+csvSafe(a.date_from||a.date)+'|'+csvSafe(a.date_to||a.date)+'|'+csvSafe(a.session)+'|'+csvSafe(a.reason);
     if(!absGroups[key]) absGroups[key]={a:a};
   });
   Object.values(absGroups).forEach(function(g){
     var a=g.a;
-    csv += '"'+a.name+'","'+a.type+'","'+(a.date_from||a.date)+'","'+(a.date_to||a.date)+'","'+(SESS_FULL[a.session]||a.session)+'","'+a.reason+'"\n';
+    csv += '"'+csvSafe(a.name)+'","'+csvSafe(a.type)+'","'+csvSafe(a.date_from||a.date)+'","'+csvSafe(a.date_to||a.date)+'","'+csvSafe(SESS_FULL[a.session]||a.session)+'","'+csvSafe(a.reason)+'"\n';
   });
 
   csv += '\nBOOKINGS\n';
   csv += 'Doctor,Clinic,Date,Session,From,To\n';
   bookings.forEach(function(b){
-    csv += '"'+b.doctor+'","'+b.clinic+'","'+b.date+'","'+(SESS_FULL[b.session]||b.session)+'","'+b.time_from+'","'+b.time_to+'"\n';
+    csv += '"'+csvSafe(b.doctor)+'","'+csvSafe(b.clinic)+'","'+csvSafe(b.date)+'","'+csvSafe(SESS_FULL[b.session]||b.session)+'","'+csvSafe(b.time_from)+'","'+csvSafe(b.time_to)+'"\n';
   });
 
   // Correlated export stats — same logic as renderLog
   var sessHrs = {morning:4, afternoon:2.5, evening:2};
   var freeSlotsExp = 0; var hoursLostExp = 0;
   absences.forEach(function(a){
-    var sessions = a.session==='all'?['morning','afternoon','evening']:[a.session];
+    var sessions = a.session==='all'?['morning','afternoon','evening']:[a.session||'morning'];
     sessions.forEach(function(sv){ freeSlotsExp+=1; hoursLostExp+=(sessHrs[sv]||0); });
   });
   hoursLostExp = Math.round(hoursLostExp*10)/10;
@@ -881,8 +883,10 @@ function exportReport() {
     var hasAbs = absences.some(function(a){ return a.date===b.date&&(a.session==='all'||a.session===b.session); });
     if(hasAbs){
       utilizedExp++;
-      var from=b.time_from?parseInt(b.time_from.split(':')[0])+parseInt(b.time_from.split(':')[1])/60:0;
-      var to=b.time_to?parseInt(b.time_to.split(':')[0])+parseInt(b.time_to.split(':')[1])/60:0;
+      var fromParts = (b.time_from||'0:0').split(':');
+      var toParts = (b.time_to||'0:0').split(':');
+      var from = (parseInt(fromParts[0])||0) + (parseInt(fromParts[1])||0)/60;
+      var to = (parseInt(toParts[0])||0) + (parseInt(toParts[1])||0)/60;
       hoursRecExp+=Math.max(0,to-from);
     }
   });
@@ -890,7 +894,7 @@ function exportReport() {
   var utilExp = freeSlotsExp>0?Math.min(100,Math.round((utilizedExp/freeSlotsExp)*100)):0;
   var hoursUtilExp = hoursLostExp>0?Math.min(100,Math.round((hoursRecExp/hoursLostExp)*100)):0;
   var absGroupsExp = {};
-  absences.forEach(function(a){ var k=a.name+'|'+(a.date_from||a.date)+'|'+(a.date_to||a.date)+'|'+a.session+'|'+a.reason; if(!absGroupsExp[k]) absGroupsExp[k]=true; });
+  absences.forEach(function(a){ var k=csvSafe(a.name)+'|'+csvSafe(a.date_from||a.date)+'|'+csvSafe(a.date_to||a.date)+'|'+csvSafe(a.session)+'|'+csvSafe(a.reason); if(!absGroupsExp[k]) absGroupsExp[k]=true; });
   csv += '\nSUMMARY\n';
   csv += 'Slots per week,51\n';
   csv += 'Clinical hours per week,152h\n';
@@ -907,9 +911,15 @@ function exportReport() {
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a');
   a.href = url;
-  a.download = 'clinic-report-' + filter + '.csv';
+  a.download = 'clinic-report-' + (logView || 'export') + '-' + period.from + '.csv';
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
   URL.revokeObjectURL(url);
+ } catch(err) {
+  console.error('Export error:', err);
+  alert('Export failed: ' + err.message);
+ }
 }
 
 function toggleOther() {
@@ -1036,6 +1046,23 @@ function renderSchedule() {
         var asst = slot.assistant || '';
         if (doc === SRG) {
           html += '<td><div class="dc dc-surgery">Surg.</div></td>';
+          continue;
+        }
+        if (doc === 'OPEN_SLOT') {
+          var bookingsOpen = getBookings(di, sv, cl, dsUTC);
+          var availableOpen = getAvailableTimes(sv, bookingsOpen);
+          var hasSpaceOpen = availableOpen.from.length > 0;
+          if (bookingsOpen.length > 0) {
+            var bookingLinesOpen = bookingsOpen.map(function(b){
+              return '<span class="booked-doc" onclick="event.stopPropagation();openCancelModal(\''+b.id+'\')" style="cursor:pointer;display:block;border-bottom:0.5px solid rgba(255,255,255,0.15);padding:1px 0;">'+b.doctor.replace('Dr. ','Dr.')+' '+b.time_from+'-'+b.time_to+'</span>';
+            }).join('');
+            var bookMoreBtnOpen = hasSpaceOpen ? '<span onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+dsUTC+'\',\'\',\'\')" style="cursor:pointer;display:block;background:rgba(255,255,255,0.15);border-radius:4px;padding:2px 4px;margin-top:3px;font-size:9px;font-weight:700;">+ Book more time</span>' : '';
+            var topLabelOpen = hasSpaceOpen ? 'PARTIAL' : 'FULLY BOOKED';
+            var bgStyleOpen = hasSpaceOpen ? 'background:linear-gradient(135deg,#1565C0,#0D47A1)' : 'background:linear-gradient(135deg,#333,#111)';
+            html += '<td><div class="dc dc-booked" style="'+bgStyleOpen+'"><span class="booked-top">'+topLabelOpen+'</span>'+bookingLinesOpen+bookMoreBtnOpen+'</div></td>';
+          } else {
+            html += '<td><div class="dc dc-free" onclick="openBookingModal('+di+',\''+sv+'\',\''+cl+'\',\''+dsUTC+'\',\'\',\'\')"><span class="free-top">FREE &#128197;</span><span class="free-doc">Open slot</span><span class="free-spec">No doctor scheduled</span></div></td>';
+          }
           continue;
         }
         if (!doc) {
