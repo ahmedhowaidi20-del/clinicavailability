@@ -80,6 +80,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .eid-modal-close{background:rgba(255,255,255,0.15);color:#fff;border:1.5px solid rgba(255,255,255,0.3);border-radius:99px;padding:8px 28px;font-size:13px;font-weight:700;cursor:pointer;}
 .sp-note{font-size:8px;color:#9E9E9E;display:block;}
 .sp-prostho{color:#4527A0;}.sp-endo{color:#BF360C;}.sp-perio{color:#00695C;}
+.sp-surgery{color:#C62828;font-style:italic;}
 .sp-resto{color:#1565C0;}.sp-ortho{color:#880E4F;}.sp-operative{color:#E65100;}
 .sp-special{color:#33691E;}.sp-fixed{color:#311B92;}
 .active-abs-item{padding:10px 0;border-bottom:1px solid #F0F0F0;font-size:13px;line-height:1.6;}
@@ -404,18 +405,19 @@ var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturda
 var SESS_LABEL = {morning:'AM', afternoon:'PM', evening:'Eve'};
 var SESS_FULL = {morning:'Morning 08:00-12:00', afternoon:'Afternoon 13:00-16:00', evening:'Evening 16:00-18:00'};
 var CLINICS = ['Clinic 1','Clinic 2','Clinic 3','Clinic 4'];
-var SRG = 'SURGERY BLOCK';
+var SRG = 'Surgery'; // Surgery team treated as a single doctor entity
 
 var SPEC_CSS = {
   'Prosthodontist':'sp-prostho','Endodontist':'sp-endo','Periodontist':'sp-perio',
   'Restorative':'sp-resto','Orthodontist':'sp-ortho','Operative':'sp-operative',
-  'Special Needs':'sp-special','Fixed Prosthodontist':'sp-fixed'
+  'Special Needs':'sp-special','Fixed Prosthodontist':'sp-fixed','Surgery':'sp-surgery'
 };
 var SPEC_STYLE = {
   'Prosthodontist':{bg:'#EDE7F6',cl:'#4527A0'},'Endodontist':{bg:'#FBE9E7',cl:'#BF360C'},
   'Periodontist':{bg:'#E0F2F1',cl:'#00695C'},'Restorative':{bg:'#E3F2FD',cl:'#1565C0'},
   'Orthodontist':{bg:'#FCE4EC',cl:'#880E4F'},'Operative':{bg:'#FFF8E1',cl:'#E65100'},
-  'Special Needs':{bg:'#F1F8E9',cl:'#33691E'},'Fixed Prosthodontist':{bg:'#EDE7F6',cl:'#311B92'}
+  'Special Needs':{bg:'#F1F8E9',cl:'#33691E'},'Fixed Prosthodontist':{bg:'#EDE7F6',cl:'#311B92'},
+  'Surgery':{bg:'#FFEBEE',cl:'#C62828'}
 };
 function ss(s) { var c = SPEC_STYLE[s]; return c ? 'background:'+c.bg+';color:'+c.cl+';' : 'background:#F5F5F5;color:#555;'; }
 function scls(s) { return SPEC_CSS[s] || ''; }
@@ -432,7 +434,8 @@ var state = {
     {name:'Dr. Wael', spec:'Operative'},
     {name:'Dr. Mawadah', spec:'Orthodontist'},
     {name:'Dr. Mohamed Alqarni', spec:'Special Needs'},
-    {name:'Dr. Sherif', spec:'Endodontist'} // kept for historical records before 2026-06-27 only
+    {name:'Dr. Sherif', spec:'Endodontist'}, // kept for historical records before 2026-06-27 only
+    {name:'Surgery', spec:'Surgery'} // Surgery team = one doctor: owns its blocks, bookable, can be marked absent
   ],
   assistants: ['Dania','Amani T','Ahlam','Kholood','Adawiya','Nojood','Ebtehal','Dana','Melani','Amani H','Monerah','Meelani'],
   absences: [],
@@ -584,6 +587,22 @@ function isAsstGone(field, dateStr, sess) {
   return true; // No dental assistant tracking - always considered available
 }
 
+// Surgery holds TWO clinics in some sessions (Mon AM = Clinic 1 + Clinic 4, Mon PM = Clinic 1).
+// One absence record can therefore free more than one clinic-session slot, so count the
+// real slots from the schedule instead of assuming 1. Everyone else still returns 1.
+function slotsFreedBy(name, dateStr, sv) {
+  var di = new Date(dateStr + 'T00:00:00').getDay();
+  var n = 0;
+  for (var ci = 0; ci < CLINICS.length; ci++) {
+    var slot = state.schedule[sk(di, sv, CLINICS[ci])] || {};
+    var doc = slot.doctor || '';
+    if (!doc || doc === 'OPEN_SLOT') continue;
+    var base = doc.replace(/\s*\(.*\)/g,'').trim();
+    if (base === name || doc === name) n++;
+  }
+  return n < 1 ? 1 : n;
+}
+
 function getSunday(ds) {
   var d = new Date(ds + 'T00:00:00');
   d.setDate(d.getDate() - d.getDay());
@@ -713,8 +732,9 @@ function renderLog() {
     // Each absence record = one clinic-session slot freed
     var sessions = a.session === 'all' ? ['morning','afternoon','evening'] : [a.session];
     sessions.forEach(function(sv) {
-      freeSlotsCount += 1;
-      hoursLost += SESSION_HOURS[sv] || 0;
+      var mult = slotsFreedBy(a.name, a.date, sv);
+      freeSlotsCount += mult;
+      hoursLost += (SESSION_HOURS[sv] || 0) * mult;
     });
   });
   openSlotEvents.forEach(function(o) {
@@ -942,7 +962,7 @@ function exportReport() {
   var freeSlotsExp = 0; var hoursLostExp = 0;
   absences.forEach(function(a){
     var sessions = a.session==='all'?['morning','afternoon','evening']:[a.session||'morning'];
-    sessions.forEach(function(sv){ freeSlotsExp+=1; hoursLostExp+=(sessHrs[sv]||0); });
+    sessions.forEach(function(sv){ var m=slotsFreedBy(a.name,a.date,sv); freeSlotsExp+=m; hoursLostExp+=(sessHrs[sv]||0)*m; });
   });
   openSlotEventsExp.forEach(function(o){ freeSlotsExp+=1; hoursLostExp+=(sessHrs[o.session]||0); });
   hoursLostExp = Math.round(hoursLostExp*10)/10;
@@ -1114,10 +1134,6 @@ function renderSchedule() {
         var slot = state.schedule[sk(di, sv, cl)] || {};
         var doc = slot.doctor || '';
         var asst = slot.assistant || '';
-        if (doc === SRG) {
-          html += '<td><div class="dc dc-surgery">Surg.</div></td>';
-          continue;
-        }
         // Dr. Sherif's open-slot replacement only applies from 27-06-2026 onward
         // (his last working day was 26-06-2026). Before that date, restore his original assignment.
         var SHERIF_LEAVE_EFFECTIVE = '2026-06-27';
