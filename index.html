@@ -267,7 +267,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
         <option value="all">All sessions - Full day</option>
         <option value="morning">Morning only (08:00-12:00)</option>
         <option value="afternoon">Afternoon only (13:00-16:00)</option>
-        <option value="evening">Evening only (16:00-18:00)</option>
+        <option value="evening">Evening only (16:00-20:00)</option>
       </select>
     </div>
     <div class="field">
@@ -403,7 +403,7 @@ var SB_KEY = 'sb_publishable_LszitImdN0859bqSCjwW9g__ocYqzPr';
 
 var DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 var SESS_LABEL = {morning:'AM', afternoon:'PM', evening:'Eve'};
-var SESS_FULL = {morning:'Morning 08:00-12:00', afternoon:'Afternoon 13:00-16:00', evening:'Evening 16:00-18:00'};
+var SESS_FULL = {morning:'Morning 08:00-12:00', afternoon:'Afternoon 13:00-16:00', evening:'Evening 16:00-20:00'};
 var CLINICS = ['Clinic 1','Clinic 2','Clinic 3','Clinic 4'];
 var SRG = 'Surgery'; // Surgery team treated as a single doctor entity
 
@@ -686,9 +686,9 @@ function renderLog() {
   var nextBtn = document.getElementById('period-next');
   if (nextBtn) nextBtn.style.opacity = logOffset >= 0 ? '0.3' : '1';
 
-  var SLOTS_PER_WEEK = 51; // Total dept slots per week (incl. surgery, excl. empty evenings)
-  var HOURS_PER_WEEK = 152; // Total clinical hours per week
-  var SESSION_HOURS = {morning: 4, afternoon: 2.5, evening: 2}; // hours per session
+  var SLOTS_PER_WEEK = 50; // Total dept slots per week (incl. surgery, excl. empty evenings)
+  var HOURS_PER_WEEK = 170; // Total clinical hours per week
+  var SESSION_HOURS = {morning: 4, afternoon: 2.5, evening: 4}; // hours per session
 
   // Only count PAST dates within the selected period (no future bookings/absences)
   var absences = state.absences.filter(function(a) {
@@ -958,7 +958,7 @@ function exportReport() {
   });
 
   // Correlated export stats — same logic as renderLog
-  var sessHrs = {morning:4, afternoon:2.5, evening:2};
+  var sessHrs = {morning:4, afternoon:2.5, evening:4};
   var freeSlotsExp = 0; var hoursLostExp = 0;
   absences.forEach(function(a){
     var sessions = a.session==='all'?['morning','afternoon','evening']:[a.session||'morning'];
@@ -1399,7 +1399,7 @@ function changeWeek(direction) {
 var SESSION_TIMES = {
   morning:   ['08:00','08:30','09:00','09:30','10:00','10:30','11:00','11:30','12:00'],
   afternoon: ['13:00','13:30','14:00','14:30','15:00','15:30','16:00'],
-  evening:   ['16:00','16:30','17:00','17:30','18:00']
+  evening:   ['16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00']
 };
 
 var currentBookingSlot = null;
