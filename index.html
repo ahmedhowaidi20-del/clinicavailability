@@ -106,6 +106,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .stf-item{display:flex;align-items:center;padding:8px 10px;border-bottom:1px solid #F0F0F0;}
 .stf-item:last-child{border:none;}
 .stf-name{font-size:13px;font-weight:700;}
+.stf-status{margin-left:auto;display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end;text-align:right;}
+.stf-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:99px;letter-spacing:0.03em;white-space:nowrap;}
+.sb-avail{background:#E8F5E9;color:#2E7D32;}
+.sb-leave{background:#FFEBEE;color:#C62828;}
+.sb-soon{background:#FFF8E1;color:#EF6C00;}
+.stf-back{font-size:10px;color:#78909C;font-weight:600;white-space:nowrap;}
+.stf-note{display:block;font-size:10px;color:#78909C;font-weight:600;margin-top:1px;}
 .spec-group{margin-bottom:10px;border-radius:10px;overflow:hidden;border:1px solid #F0F0F0;}
 .spec-group-title{font-size:10px;font-weight:800;padding:5px 10px;letter-spacing:0.06em;text-transform:uppercase;border-bottom:1px solid rgba(0,0,0,0.06);}
 .rmbtn{width:32px;height:32px;border-radius:8px;border:none;background:#FFEBEE;color:#C62828;font-size:17px;cursor:pointer;font-weight:700;}
@@ -431,9 +438,11 @@ var state = {
     {name:'Dr. Noran', spec:'Orthodontist'},
     {name:'Dr. Amira', spec:'Fixed Prosthodontist'},
     {name:'Dr. Iina', spec:'Orthodontist'},
-    {name:'Dr. Wael', spec:'Operative'},
+    {name:'Dr. Wael', spec:'Operative', note:'Clinic 5 \u2014 Inpatients'}, // moved off the outpatient grid 2026-09-06
+    {name:'Dr. Ghaidaa', spec:'Restorative'}, // joined 2026-09-06 - see GHAIDAA_START
     {name:'Dr. Mawadah', spec:'Orthodontist'},
     {name:'Dr. Mohamed Alqarni', spec:'Special Needs'},
+    {name:'Dr. Maghrabi', spec:'Endodontist'}, // joined 2026-09-06 - see MAGHRABI_START
     {name:'Dr. Sherif', spec:'Endodontist'}, // kept for historical records before 2026-06-27 only
     {name:'Surgery', spec:'Surgery'} // Surgery team = one doctor: owns its blocks, bookable, can be marked absent
   ],
@@ -445,6 +454,45 @@ var state = {
 };
 
 function sk(d,s,c) { return d+'__'+s+'__'+c; }
+
+// ---- Staff change-over dates (single source of truth) ----
+var SHERIF_LEAVE_EFFECTIVE = '2026-06-27'; // first day his slots were unstaffed
+var MAGHRABI_START = '2026-09-06';         // first day Dr. Maghrabi occupies his clinics
+var GHAIDAA_START  = '2026-09-06';         // first day Dr. Ghaidaa takes over Dr. Wael's clinics
+
+// Resolves who actually held a slot on a given date, so historical weeks stay accurate.
+function resolveDoctor(doc, di, sv, cl, dateStr) {
+  if (doc === 'Dr. Maghrabi' && dateStr < MAGHRABI_START) {
+    if (cl === 'Clinic 2' && sv === 'morning' && (di === 1 || di === 2)) { doc = 'OPEN_SLOT'; }
+    else if (cl === 'Clinic 2' && sv === 'afternoon' && di === 3) { doc = 'Dr. Mohamed Alqarni'; }
+    else { doc = ''; }
+  }
+  if (dateStr < GHAIDAA_START && doc.indexOf('Dr. Ghaidaa') === 0) {
+    doc = doc.replace('Dr. Ghaidaa', 'Dr. Wael');
+  }
+  if (doc === 'OPEN_SLOT' && dateStr < SHERIF_LEAVE_EFFECTIVE) {
+    if (cl === 'Clinic 2' && sv === 'morning' && (di === 1 || di === 2)) { doc = 'Dr. Sherif'; }
+  }
+  return doc;
+}
+
+// Weekly capacity computed from the live grid rather than hard-coded, so it can't drift.
+function weeklyCapacity(dateStr) {
+  var SH = {morning:4, afternoon:2.5, evening:4};
+  var slots = 0, hours = 0;
+  var sessions = ['morning','afternoon','evening'];
+  for (var di = 0; di < 5; di++) {
+    for (var si = 0; si < sessions.length; si++) {
+      for (var ci = 0; ci < CLINICS.length; ci++) {
+        var slot = state.schedule[sk(di, sessions[si], CLINICS[ci])] || {};
+        if (resolveDoctor(slot.doctor || '', di, sessions[si], CLINICS[ci], dateStr)) {
+          slots++; hours += SH[sessions[si]];
+        }
+      }
+    }
+  }
+  return {slots:slots, hours:hours};
+}
 
 function loadSchedule() {
   var S = state.schedule;
@@ -462,7 +510,7 @@ function loadSchedule() {
   a(0,'evening','Clinic 3','','');
   a(0,'evening','Clinic 4','Dr. Noran','Amani H');
   a(1,'morning','Clinic 1',SRG,'Ahlam / Amani T');
-  a(1,'morning','Clinic 2','OPEN_SLOT','Adawiya');
+  a(1,'morning','Clinic 2','Dr. Maghrabi','Adawiya');
   a(1,'morning','Clinic 3','Dr. Howaidi (Consultation)','');
   a(1,'morning','Clinic 4',SRG,'Amani H / Dana');
   a(1,'afternoon','Clinic 1',SRG,'Amani T / Ahlam');
@@ -474,15 +522,15 @@ function loadSchedule() {
   a(1,'evening','Clinic 3','Dr. Iina','Ebtehal');
   a(1,'evening','Clinic 4','Dr. Amira','Meelani');
   a(2,'morning','Clinic 1',SRG,'Ahlam');
-  a(2,'morning','Clinic 2','OPEN_SLOT','Adawiya / Kholood');
+  a(2,'morning','Clinic 2','Dr. Maghrabi','Adawiya / Kholood');
   a(2,'morning','Clinic 3','Dr. Howaidi','Ebtehal');
   a(2,'morning','Clinic 4','Dr. Noran','Melani / Amani H');
   a(2,'afternoon','Clinic 1',SRG,'Ahlam / Amani T');
-  a(2,'afternoon','Clinic 2','Dr. Wael','Adawiya / Kholood');
+  a(2,'afternoon','Clinic 2','Dr. Ghaidaa','Adawiya / Kholood');
   a(2,'afternoon','Clinic 3','Dr. Iina','Ebtehal / Dana');
   a(2,'afternoon','Clinic 4','Dr. Mawadah','Melani / Amani H');
   a(2,'evening','Clinic 1','Dr. Kariem','');
-  a(2,'evening','Clinic 2','Dr. Wael','Amani T');
+  a(2,'evening','Clinic 2','Dr. Ghaidaa','Amani T');
   a(2,'evening','Clinic 3','Dr. Nehal (Hygiene)','');
   a(2,'evening','Clinic 4','Dr. Mawadah','Dania');
   a(3,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
@@ -490,18 +538,18 @@ function loadSchedule() {
   a(3,'morning','Clinic 3','Dr. Howaidi','Ebtehal / Dana');
   a(3,'morning','Clinic 4','Dr. Amira','Melani / Amani H');
   a(3,'afternoon','Clinic 1','Dr. Kariem','Amani T / Dania');
-  a(3,'afternoon','Clinic 2','Dr. Mohamed Alqarni','Adawiya / Kholood');
+  a(3,'afternoon','Clinic 2','Dr. Maghrabi','Adawiya / Kholood');
   a(3,'afternoon','Clinic 3','Dr. Nehal','Ebtehal / Dana');
   a(3,'afternoon','Clinic 4','Dr. Amira','Amani H / Melani');
   a(3,'evening','Clinic 1','','');
-  a(3,'evening','Clinic 2','','');
+  a(3,'evening','Clinic 2','Dr. Maghrabi','');
   a(3,'evening','Clinic 3','Dr. Nehal','Monerah');
   a(3,'evening','Clinic 4','','');
   a(4,'morning','Clinic 1',SRG,'Amani T / Ahlam');
-  a(4,'morning','Clinic 2','Dr. Wael','Adawiya / Kholood');
+  a(4,'morning','Clinic 2','Dr. Ghaidaa','Adawiya / Kholood');
   a(4,'morning','Clinic 3','Dr. Amira','Ebtehal / Dana');
   a(4,'morning','Clinic 4','Dr. Mawadah','Melani / Amani H');
-  a(4,'afternoon','Clinic 1','Dr. Wael (Consultation)','Amani T / Ahlam');
+  a(4,'afternoon','Clinic 1','Dr. Ghaidaa (Consultation)','Amani T / Ahlam');
   a(4,'afternoon','Clinic 2','Dr. Fatima','Adawiya / Kholood');
   a(4,'afternoon','Clinic 3','Dr. Amira','Ebtehal / Dana');
   a(4,'afternoon','Clinic 4','Dr. Iina','Amani H / Melani');
@@ -686,8 +734,10 @@ function renderLog() {
   var nextBtn = document.getElementById('period-next');
   if (nextBtn) nextBtn.style.opacity = logOffset >= 0 ? '0.3' : '1';
 
-  var SLOTS_PER_WEEK = 50; // Total dept slots per week (incl. surgery, excl. empty evenings)
-  var HOURS_PER_WEEK = 170; // Total clinical hours per week
+  var capAsOf = (period.to < todayStr ? period.to : todayStr);
+  var cap = weeklyCapacity(capAsOf);
+  var SLOTS_PER_WEEK = cap.slots;  // computed from the grid as of capAsOf
+  var HOURS_PER_WEEK = cap.hours;  // computed from the grid as of capAsOf
   var SESSION_HOURS = {morning: 4, afternoon: 2.5, evening: 4}; // hours per session
 
   // Only count PAST dates within the selected period (no future bookings/absences)
@@ -711,14 +761,13 @@ function renderLog() {
   // Dr. Sherif's old slot (Mon/Tue AM Clinic 2) has had no doctor assigned since 2026-06-27.
   // Every past Monday/Tuesday in the selected period counts as a lost free slot by default,
   // exactly like an absence would, even though there's no absence record for it.
-  var SHERIF_LEAVE_EFFECTIVE = '2026-06-27';
-  var openSlotEvents = []; // {date, session:'morning'}
+  var openSlotEvents = []; // {date, session:'morning'} - unstaffed only between the two dates
   (function generateOpenSlots() {
     var d = new Date(Math.max(new Date(period.from+'T00:00:00').getTime(), new Date(SHERIF_LEAVE_EFFECTIVE+'T00:00:00').getTime()));
     var end = new Date(Math.min(new Date(period.to+'T00:00:00').getTime(), new Date(todayStr+'T00:00:00').getTime()));
     while (d <= end) {
       var wd = d.getDay(); // 0=Sun ... 1=Mon, 2=Tue
-      if (wd === 1 || wd === 2) {
+      if ((wd === 1 || wd === 2) && fmt(d) < MAGHRABI_START) {
         openSlotEvents.push({date: fmt(d), session: 'morning'});
       }
       d.setDate(d.getDate() + 1);
@@ -770,7 +819,7 @@ function renderLog() {
   statsEl.style.gridTemplateColumns = '1fr 1fr';
   statsEl.innerHTML =
     '<div class="stat-card"><div class="sv">'+SLOTS_PER_WEEK+'</div><div class="sl">Slots / week</div></div>' +
-    '<div class="stat-card"><div class="sv">'+HOURS_PER_WEEK+'h</div><div class="sl">Hours / week</div></div>' +
+    '<div class="stat-card"><div class="sv">'+(HOURS_PER_WEEK % 1 ? HOURS_PER_WEEK.toFixed(1) : HOURS_PER_WEEK)+'h</div><div class="sl">Hours / week</div></div>' +
     '<div class="stat-card"><div class="sv" style="color:#E53935;">'+freeSlotsCount+'</div><div class="sl">Free slots</div></div>' +
     '<div class="stat-card"><div class="sv" style="color:#E53935;">'+hoursLost+'h</div><div class="sl">Hours lost</div></div>' +
     '<div class="stat-card"><div class="sv" style="color:#43A047;">'+utilizedSlots+'</div><div class="sl">Bookings made</div></div>' +
@@ -938,19 +987,20 @@ function exportReport() {
   });
 
   // Generate the same OPEN_SLOT synthetic events used in renderLog (Dr. Sherif's old Mon/Tue AM Clinic 2 slot)
-  var SHERIF_LEAVE_EFFECTIVE_EXP = '2026-06-27';
+  var SHERIF_LEAVE_EFFECTIVE_EXP = SHERIF_LEAVE_EFFECTIVE;
   var openSlotEventsExp = [];
   (function(){
     var d = new Date(Math.max(new Date(period.from+'T00:00:00').getTime(), new Date(SHERIF_LEAVE_EFFECTIVE_EXP+'T00:00:00').getTime()));
     var end = new Date(Math.min(new Date(period.to+'T00:00:00').getTime(), new Date(todayStr+'T00:00:00').getTime()));
     while (d <= end) {
       var wd = d.getDay();
-      if (wd === 1 || wd === 2) { openSlotEventsExp.push({date: d.toISOString().split('T')[0], session: 'morning'}); }
+      var dsExp = d.toISOString().split('T')[0];
+      if ((wd === 1 || wd === 2) && dsExp < MAGHRABI_START) { openSlotEventsExp.push({date: dsExp, session: 'morning'}); }
       d.setDate(d.getDate() + 1);
     }
   })();
 
-  csv += '\nUNSTAFFED OPEN SLOTS (Clinic 2, Mon/Tue AM, since Dr. Sherif departure)\n';
+  csv += '\nUNSTAFFED OPEN SLOTS (Clinic 2, Mon/Tue AM, Dr. Sherif departure until Dr. Maghrabi joined)\n';
   csv += 'Date,Session,Status\n';
   openSlotEventsExp.forEach(function(o){
     var wasBooked = bookings.some(function(b){ return b.date===o.date && b.session===o.session && b.clinic==='Clinic 2'; });
@@ -1055,7 +1105,7 @@ async function logAbsence() {
       state.absences.push({id:'L'+Date.now()+'_'+i, type:type, name:name, date:dates[i], session:sess, reason:reason, date_from:dateFrom, date_to:dateTo});
     }
   }
-  renderAbsenceList(); renderSchedule();
+  renderAbsenceList(); renderSchedule(); renderStaff();
   if (document.getElementById('panel-log').classList.contains('active')) { renderLog(); }
   btn.textContent = '\u2713 Confirm absence'; btn.disabled = false;
 }
@@ -1066,7 +1116,7 @@ async function deleteGroup(ids) {
     try { await dbFetch('absences?id=eq.' + ids[i], {method:'DELETE', headers:{'Prefer':''}}); } catch(e) {}
   }
   state.absences = state.absences.filter(function(a) { return ids.indexOf(a.id) === -1; });
-  renderAbsenceList();
+  renderAbsenceList(); renderStaff();
   renderSchedule();
   // Refresh log if it's currently visible
   if (document.getElementById('panel-log').classList.contains('active')) { renderLog(); }
@@ -1134,13 +1184,7 @@ function renderSchedule() {
         var slot = state.schedule[sk(di, sv, cl)] || {};
         var doc = slot.doctor || '';
         var asst = slot.assistant || '';
-        // Dr. Sherif's open-slot replacement only applies from 27-06-2026 onward
-        // (his last working day was 26-06-2026). Before that date, restore his original assignment.
-        var SHERIF_LEAVE_EFFECTIVE = '2026-06-27';
-        if (doc === 'OPEN_SLOT' && dsUTC < SHERIF_LEAVE_EFFECTIVE) {
-          if (di === 1 && sv === 'morning' && cl === 'Clinic 2') { doc = 'Dr. Sherif'; }
-          if (di === 2 && sv === 'morning' && cl === 'Clinic 2') { doc = 'Dr. Sherif'; }
-        }
+        doc = resolveDoctor(doc, di, sv, cl, dsUTC);
         if (doc === 'OPEN_SLOT') {
           var bookingsOpen = getBookings(di, sv, cl, dsUTC);
           var availableOpen = getAvailableTimes(sv, bookingsOpen);
@@ -1294,6 +1338,61 @@ function renderAbsenceList() {
   });
 }
 
+// --- Leave status helpers (local-date safe; work week Sun-Thu) ---
+function ymdLocal(d) {
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function nextWorkingDay(dateStr) {
+  var d = new Date(dateStr + 'T00:00:00');
+  d.setDate(d.getDate() + 1);
+  var guard = 0;
+  while (d.getDay() > 4 && guard++ < 10) { d.setDate(d.getDate() + 1); }
+  return ymdLocal(d);
+}
+function shortDate(dateStr) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+}
+// Returns {state:'on-leave'|'upcoming'|'available', from, to, back, session, reason}
+function leaveStatus(name) {
+  var todayStr = ymdLocal(new Date());
+  var seen = {}, list = [];
+  (state.absences || []).forEach(function(a) {
+    if (!a || a.name !== name) return;
+    var from = a.date_from || a.date, to = a.date_to || a.date;
+    var k = from + '|' + to + '|' + a.session + '|' + a.reason;
+    if (seen[k]) return;
+    seen[k] = true;
+    list.push({from:from, to:to, session:a.session, reason:a.reason});
+  });
+  var active = list.filter(function(e){ return todayStr >= e.from && todayStr <= e.to; });
+  if (active.length) {
+    active.sort(function(a,b){ return b.to.localeCompare(a.to); });
+    var e = active[0];
+    return {state:'on-leave', from:e.from, to:e.to, back:nextWorkingDay(e.to), session:e.session, reason:e.reason};
+  }
+  var future = list.filter(function(e){ return e.from > todayStr; });
+  if (future.length) {
+    future.sort(function(a,b){ return a.from.localeCompare(b.from); });
+    var f = future[0];
+    return {state:'upcoming', from:f.from, to:f.to, back:nextWorkingDay(f.to), session:f.session, reason:f.reason};
+  }
+  return {state:'available'};
+}
+function statusBadge(name) {
+  var st = leaveStatus(name);
+  if (st.state === 'on-leave') {
+    var sessTag = (st.session && st.session !== 'all')
+      ? ' <span class="stf-back">(' + (SESS_FULL[st.session]||st.session).split(' ')[0] + ' only)</span>' : '';
+    return '<span class="stf-badge sb-leave">On leave</span>' +
+           '<span class="stf-back">back ' + shortDate(st.back) + '</span>' + sessTag;
+  }
+  if (st.state === 'upcoming') {
+    return '<span class="stf-badge sb-soon">Leave ' + shortDate(st.from) + '</span>' +
+           '<span class="stf-back">back ' + shortDate(st.back) + '</span>';
+  }
+  return '<span class="stf-badge sb-avail">Available</span>';
+}
+
 function renderStaff() {
   // Group doctors by specialty (excluding former staff kept only for historical schedule records)
   var groups = {};
@@ -1306,14 +1405,19 @@ function renderStaff() {
     html += '<div class="spec-group">';
     html += '<div class="spec-group-title" style="' + ss(spec) + '">' + spec + '</div>';
     groups[spec].forEach(function(d) {
-      html += '<div class="stf-item"><div class="stf-name">' + d.name + '</div></div>';
+      var nameCell = '<div class="stf-name">' + d.name +
+        (d.note ? '<span class="stf-note">' + d.note + '</span>' : '') + '</div>';
+      html += '<div class="stf-item">' + nameCell + '<div class="stf-status">' + statusBadge(d.name) + '</div></div>';
     });
     html += '</div>';
   });
   document.getElementById('doctor-list').innerHTML = html;
-  document.getElementById('assistant-list').innerHTML = state.assistants.length ? state.assistants.map(function(n) {
-    return '<div class="chip">' + n + '</div>';
-  }).join('') : '<div class="empty">None added</div>';
+  var asstEl = document.getElementById('assistant-list');
+  if (asstEl) {
+    asstEl.innerHTML = state.assistants.length ? state.assistants.map(function(n) {
+      return '<div class="chip">' + statusBadge(n) + ' ' + n + '</div>';
+    }).join('') : '<div class="empty">None added</div>';
+  }
 }
 
 function addDoctor() {
