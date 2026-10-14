@@ -420,14 +420,16 @@ var SRG = 'Surgery'; // Surgery team treated as a single doctor entity
 var SPEC_CSS = {
   'Prosthodontist':'sp-prostho','Endodontist':'sp-endo','Periodontist':'sp-perio',
   'Restorative':'sp-resto','Orthodontist':'sp-ortho','Operative':'sp-operative',
-  'Special Needs':'sp-special','Fixed Prosthodontist':'sp-fixed','Surgery':'sp-surgery'
+  'Special Needs':'sp-special','Fixed Prosthodontist':'sp-fixed','Surgery':'sp-surgery',
+  'Dental Hygienist':'sp-perio'
 };
 var SPEC_STYLE = {
   'Prosthodontist':{bg:'#EDE7F6',cl:'#4527A0'},'Endodontist':{bg:'#FBE9E7',cl:'#BF360C'},
   'Periodontist':{bg:'#E0F2F1',cl:'#00695C'},'Restorative':{bg:'#E3F2FD',cl:'#1565C0'},
   'Orthodontist':{bg:'#FCE4EC',cl:'#880E4F'},'Operative':{bg:'#FFF8E1',cl:'#E65100'},
   'Special Needs':{bg:'#F1F8E9',cl:'#33691E'},'Fixed Prosthodontist':{bg:'#EDE7F6',cl:'#311B92'},
-  'Surgery':{bg:'#FFEBEE',cl:'#C62828'}
+  'Surgery':{bg:'#FFEBEE',cl:'#C62828'},
+  'Dental Hygienist':{bg:'#E0F7FA',cl:'#00838F'}
 };
 function ss(s) { var c = SPEC_STYLE[s]; return c ? 'background:'+c.bg+';color:'+c.cl+';' : 'background:#F5F5F5;color:#555;'; }
 function scls(s) { return SPEC_CSS[s] || ''; }
@@ -446,6 +448,8 @@ var state = {
     {name:'Dr. Mawadah', spec:'Orthodontist'},
     {name:'Dr. Mohamed Alqarni', spec:'Special Needs'},
     {name:'Dr. Maghrabi', spec:'Endodontist'}, // joined 2026-09-06 - see MAGHRABI_START
+    {name:'Dr. Rami', spec:'Restorative'}, // joined 2026-10-18 - see RAMI_START
+    {name:'Saad', spec:'Dental Hygienist', note:'Works in Dr. Nehal\'s clinic', noClinic:true}, // no clinic of his own; can book free clinics
     {name:'Dr. Sherif', spec:'Endodontist'}, // kept for historical records before 2026-06-27 only
     {name:'Surgery', spec:'Surgery'} // Surgery team = one doctor: owns its blocks, bookable, can be marked absent
   ],
@@ -462,9 +466,14 @@ function sk(d,s,c) { return d+'__'+s+'__'+c; }
 var SHERIF_LEAVE_EFFECTIVE = '2026-06-27'; // first day his slots were unstaffed
 var MAGHRABI_START = '2026-09-06';         // first day Dr. Maghrabi occupies his clinics
 var GHAIDAA_START  = '2026-09-06';         // first day Dr. Ghaidaa takes over Dr. Wael's clinics
+var RAMI_START     = '2026-10-18';         // first day Dr. Rami takes Mon eve Clinic 2 (was Dr. Fatima) and Thu PM Clinic 3 (was Dr. Amira)
 
 // Resolves who actually held a slot on a given date, so historical weeks stay accurate.
 function resolveDoctor(doc, di, sv, cl, dateStr) {
+  if (doc === 'Dr. Rami' && dateStr < RAMI_START) {
+    if (cl === 'Clinic 2' && sv === 'evening' && di === 1) { doc = 'Dr. Fatima'; }
+    else if (cl === 'Clinic 3' && sv === 'afternoon' && di === 4) { doc = 'Dr. Amira'; }
+  }
   if (doc === 'Dr. Maghrabi' && dateStr < MAGHRABI_START) {
     if (cl === 'Clinic 2' && sv === 'morning' && (di === 1 || di === 2)) { doc = 'OPEN_SLOT'; }
     else if (cl === 'Clinic 2' && sv === 'afternoon' && di === 3) { doc = 'Dr. Mohamed Alqarni'; }
@@ -521,7 +530,7 @@ function loadSchedule() {
   a(1,'afternoon','Clinic 3','Dr. Nehal','Dana / Ebtehal');
   a(1,'afternoon','Clinic 4','Dr. Amira','Melani / Amani H');
   a(1,'evening','Clinic 1','','');
-  a(1,'evening','Clinic 2','Dr. Fatima','Kholood');
+  a(1,'evening','Clinic 2','Dr. Rami','Kholood');
   a(1,'evening','Clinic 3','Dr. Iina','Ebtehal');
   a(1,'evening','Clinic 4','Dr. Amira','Meelani');
   a(2,'morning','Clinic 1',SRG,'Ahlam');
@@ -534,7 +543,7 @@ function loadSchedule() {
   a(2,'afternoon','Clinic 4','Dr. Mawadah','Melani / Amani H');
   a(2,'evening','Clinic 1','Dr. Kariem','');
   a(2,'evening','Clinic 2','Dr. Ghaidaa','Amani T');
-  a(2,'evening','Clinic 3','Dr. Nehal (Hygiene)','');
+  a(2,'evening','Clinic 3','Dr. Nehal (Hyg. Saad)','');
   a(2,'evening','Clinic 4','Dr. Mawadah','Dania');
   a(3,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
   a(3,'morning','Clinic 2','Dr. Fatima','Kholood');
@@ -554,7 +563,7 @@ function loadSchedule() {
   a(4,'morning','Clinic 4','Dr. Mawadah','Melani / Amani H');
   a(4,'afternoon','Clinic 1','Dr. Ghaidaa (Consultation)','Amani T / Ahlam');
   a(4,'afternoon','Clinic 2','Dr. Fatima','Adawiya / Kholood');
-  a(4,'afternoon','Clinic 3','Dr. Amira','Ebtehal / Dana');
+  a(4,'afternoon','Clinic 3','Dr. Rami','Ebtehal / Dana');
   a(4,'afternoon','Clinic 4','Dr. Iina','Amani H / Melani');
 }
 
@@ -655,6 +664,9 @@ function isAsstGone(field, dateStr, sess) {
 // One absence record can therefore free more than one clinic-session slot, so count the
 // real slots from the schedule instead of assuming 1. Everyone else still returns 1.
 function slotsFreedBy(name, dateStr, sv) {
+  // Staff with no clinic of their own (e.g. the hygienist) free no clinic when absent
+  var staff = state.doctors.find(function(d){ return d.name === name; });
+  if (staff && staff.noClinic) return 0;
   var di = new Date(dateStr + 'T00:00:00').getDay();
   var n = 0;
   for (var ci = 0; ci < CLINICS.length; ci++) {
