@@ -322,7 +322,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <button onclick="setLogView(&#39;month&#39;)" id="lv-month" class="lv-btn">Month</button>
       <button onclick="setLogView(&#39;year&#39;)" id="lv-year" class="lv-btn">Year</button>
       <button onclick="setLogView(&#39;all&#39;)" id="lv-all" class="lv-btn">All time</button>
-      <button onclick="exportReport()" style="margin-left:auto;padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#1976D2,#1565C0);color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">📥 Export</button>
+      <button id="export-btn" onclick="exportReport()" title="Download the report as an Excel file" style="margin-left:auto;padding:7px 12px;border-radius:8px;border:none;background:linear-gradient(135deg,#1976D2,#1565C0);color:#fff;font-size:11px;font-weight:700;font-family:inherit;cursor:pointer;">📥 Export</button>
     </div>
     <div id="log-period-picker" style="display:flex;align-items:center;gap:8px;">
       <button onclick="shiftPeriod(-1)" style="background:#E3F2FD;border:none;border-radius:8px;width:32px;height:32px;font-size:18px;cursor:pointer;color:#1565C0;font-weight:700;">←</button>
@@ -444,7 +444,7 @@ var state = {
     {name:'Dr. Amira', spec:'Fixed Prosthodontist'},
     {name:'Dr. Iina', spec:'Orthodontist'},
     {name:'Dr. Wael', spec:'Operative', note:'Clinic 5 \u2014 Inpatients'}, // moved off the outpatient grid 2026-09-06
-    {name:'Dr. Ghaidaa', spec:'Restorative'}, // joined 2026-09-06 - see GHAIDAA_START
+    {name:'Dr. Ghaidaa', spec:'Restorative'}, // 2026-09-06 to 2026-10-29 - see GHAIDAA_START / GHAIDAA_END; kept for historical records
     {name:'Dr. Mawadah', spec:'Orthodontist'},
     {name:'Dr. Mohamed Alqarni', spec:'Special Needs'},
     {name:'Dr. Maghrabi', spec:'Endodontist'}, // joined 2026-09-06 - see MAGHRABI_START
@@ -467,9 +467,21 @@ var SHERIF_LEAVE_EFFECTIVE = '2026-06-27'; // first day his slots were unstaffed
 var MAGHRABI_START = '2026-09-06';         // first day Dr. Maghrabi occupies his clinics
 var GHAIDAA_START  = '2026-09-06';         // first day Dr. Ghaidaa takes over Dr. Wael's clinics
 var RAMI_START     = '2026-10-18';         // first day Dr. Rami takes Mon eve Clinic 2 (was Dr. Fatima) and Thu PM Clinic 3 (was Dr. Amira)
+var GHAIDAA_END    = '2026-11-01';         // first day of the schedule without Dr. Ghaidaa: Dr. Rami takes Tue PM + Eve Clinic 2 and
+                                           // Thu AM Clinic 2 (consultation); Dr. Wael takes Thu PM Clinic 1 (consultation)
+// Keep these change-over dates on a Sunday: the grid compares them with UTC day keys, which run one day behind Riyadh time.
+
+// Staff who have left: hidden from the staff list and dropdowns from this date, kept for historical weeks and reports.
+var STAFF_LEFT = {'Dr. Sherif': SHERIF_LEAVE_EFFECTIVE, 'Dr. Ghaidaa': GHAIDAA_END};
+function isCurrentStaff(d) { var left = STAFF_LEFT[d.name]; return !left || ymdLocal(new Date()) < left; }
 
 // Resolves who actually held a slot on a given date, so historical weeks stay accurate.
 function resolveDoctor(doc, di, sv, cl, dateStr) {
+  if (dateStr < GHAIDAA_END) {
+    if (cl === 'Clinic 2' && di === 2 && (sv === 'afternoon' || sv === 'evening')) { doc = 'Dr. Ghaidaa'; }
+    else if (cl === 'Clinic 2' && di === 4 && sv === 'morning') { doc = 'Dr. Ghaidaa'; }
+    else if (cl === 'Clinic 1' && di === 4 && sv === 'afternoon') { doc = 'Dr. Ghaidaa (Consultation)'; }
+  }
   if (doc === 'Dr. Rami' && dateStr < RAMI_START) {
     if (cl === 'Clinic 2' && sv === 'evening' && di === 1) { doc = 'Dr. Fatima'; }
     else if (cl === 'Clinic 3' && sv === 'afternoon' && di === 4) { doc = 'Dr. Amira'; }
@@ -538,11 +550,11 @@ function loadSchedule() {
   a(2,'morning','Clinic 3','Dr. Howaidi','Ebtehal');
   a(2,'morning','Clinic 4','Dr. Noran','Melani / Amani H');
   a(2,'afternoon','Clinic 1',SRG,'Ahlam / Amani T');
-  a(2,'afternoon','Clinic 2','Dr. Ghaidaa','Adawiya / Kholood');
+  a(2,'afternoon','Clinic 2','Dr. Rami','Adawiya / Kholood'); // Dr. Ghaidaa before GHAIDAA_END
   a(2,'afternoon','Clinic 3','Dr. Iina','Ebtehal / Dana');
   a(2,'afternoon','Clinic 4','Dr. Mawadah','Melani / Amani H');
   a(2,'evening','Clinic 1','Dr. Kariem','');
-  a(2,'evening','Clinic 2','Dr. Ghaidaa','Amani T');
+  a(2,'evening','Clinic 2','Dr. Rami','Amani T'); // Dr. Ghaidaa before GHAIDAA_END
   a(2,'evening','Clinic 3','Dr. Nehal (Hyg. Saad)','');
   a(2,'evening','Clinic 4','Dr. Mawadah','Dania');
   a(3,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
@@ -558,10 +570,10 @@ function loadSchedule() {
   a(3,'evening','Clinic 3','Dr. Nehal','Monerah');
   a(3,'evening','Clinic 4','','');
   a(4,'morning','Clinic 1',SRG,'Amani T / Ahlam');
-  a(4,'morning','Clinic 2','Dr. Ghaidaa','Adawiya / Kholood');
+  a(4,'morning','Clinic 2','Dr. Rami (Consultation)','Adawiya / Kholood'); // Dr. Ghaidaa before GHAIDAA_END
   a(4,'morning','Clinic 3','Dr. Amira','Ebtehal / Dana');
   a(4,'morning','Clinic 4','Dr. Mawadah','Melani / Amani H');
-  a(4,'afternoon','Clinic 1','Dr. Ghaidaa (Consultation)','Amani T / Ahlam');
+  a(4,'afternoon','Clinic 1','Dr. Wael (Consultation)','Amani T / Ahlam'); // Dr. Ghaidaa (Consultation) before GHAIDAA_END
   a(4,'afternoon','Clinic 2','Dr. Fatima','Adawiya / Kholood');
   a(4,'afternoon','Clinic 3','Dr. Rami','Ebtehal / Dana');
   a(4,'afternoon','Clinic 4','Dr. Iina','Amani H / Melani');
@@ -667,11 +679,11 @@ function slotsFreedBy(name, dateStr, sv) {
   // Staff with no clinic of their own (e.g. the hygienist) free no clinic when absent
   var staff = state.doctors.find(function(d){ return d.name === name; });
   if (staff && staff.noClinic) return 0;
-  var di = new Date(dateStr + 'T00:00:00').getDay();
+  var di = keyToLocalDate(dateStr).getDay(); // dateStr is a UTC day key (one day behind), so take the weekday of the real date
   var n = 0;
   for (var ci = 0; ci < CLINICS.length; ci++) {
     var slot = state.schedule[sk(di, sv, CLINICS[ci])] || {};
-    var doc = slot.doctor || '';
+    var doc = resolveDoctor(slot.doctor || '', di, sv, CLINICS[ci], dateStr); // who held it on that date
     if (!doc || doc === 'OPEN_SLOT') continue;
     var base = doc.replace(/\s*\(.*\)/g,'').trim();
     if (base === name || doc === name) n++;
@@ -695,7 +707,7 @@ function switchTab(tab, btn) {
   if (tab === 'staff') renderStaff();
   if (tab === 'absence') { populateAbsStaff(); renderAbsenceList(); }
   if (tab === 'schedule') renderSchedule();
-  if (tab === 'log') { setLogView(logView); renderLog(); }
+  if (tab === 'log') { setLogView(logView); renderLog(); loadExcelLib().catch(function(){}); } // preload so Export is quick
 }
 
 // ── LOG & STATISTICS ──────────────────────────────────────────
@@ -980,8 +992,79 @@ function renderLog() {
   feedEl.innerHTML = html;
 }
 
-function exportReport() {
+// ── EXCEL EXPORT ──────────────────────────────────────────────
+// Builds a real .xlsx workbook (ExcelJS, loaded on demand). It replaced the old CSV export, which Excel
+// opened garbled: no UTF-8 marker, comma-separated values on PCs set to use semicolons, and the download
+// link was revoked before the browser had finished saving the file.
+var EXCELJS_URL = 'https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+var XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+var _excelLibPromise = null;
+function loadExcelLib() {
+  if (window.ExcelJS) return Promise.resolve(window.ExcelJS);
+  if (_excelLibPromise) return _excelLibPromise;
+  _excelLibPromise = new Promise(function(resolve, reject) {
+    var s = document.createElement('script');
+    s.src = EXCELJS_URL; s.async = true;
+    s.onload = function() {
+      if (window.ExcelJS) { resolve(window.ExcelJS); return; }
+      _excelLibPromise = null; reject(new Error('the Excel library did not load'));
+    };
+    s.onerror = function() {
+      _excelLibPromise = null; s.remove();
+      reject(new Error('could not load the Excel library — check the internet connection and try again'));
+    };
+    document.head.appendChild(s);
+  });
+  return _excelLibPromise;
+}
+
+// Per-day keys (absence.date, booking.date) are saved as fmt(local midnight), i.e. the UTC date,
+// which in Riyadh is the day BEFORE the real clinic day. Turn a key back into the real local date.
+function keyToLocalDate(key) {
+  var d = new Date(key + 'T00:00:00');
+  for (var i = 0; i < 2; i++) {
+    var c = new Date(d.getFullYear(), d.getMonth(), d.getDate() + i);
+    if (fmt(c) === key) return c;
+  }
+  return d;
+}
+// Excel date cell for a local date (ExcelJS writes dates as UTC)
+function xlDate(d) { return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); }
+function xlDateFromYmd(ymd) { var p = String(ymd || '').split('-'); return p.length === 3 ? new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])) : ''; }
+function hhmmToHours(t) { var p = String(t || '0:0').split(':'); return (parseInt(p[0]) || 0) + (parseInt(p[1]) || 0) / 60; }
+
+function saveBlob(blob, fileName) {
+  // iPhone home-screen app: blob downloads don't save there, so hand the file to the share sheet instead.
+  if (navigator.standalone && navigator.canShare && typeof File === 'function') {
+    try {
+      var file = new File([blob], fileName, {type: blob.type});
+      if (navigator.canShare({files: [file]})) {
+        return navigator.share({files: [file], title: fileName}).catch(function(e) {
+          if (e && e.name === 'AbortError') return; // user closed the share sheet
+          downloadBlob(blob, fileName);
+        });
+      }
+    } catch (e) { /* fall through to a normal download */ }
+  }
+  downloadBlob(blob, fileName);
+  return Promise.resolve();
+}
+function downloadBlob(blob, fileName) {
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = fileName; a.rel = 'noopener'; a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  // Keep the link alive until the browser has finished writing the file (revoking at once can leave it empty or broken).
+  setTimeout(function() { if (a.parentNode) a.parentNode.removeChild(a); URL.revokeObjectURL(url); }, 60000);
+}
+
+async function exportReport() {
+  var btn = document.getElementById('export-btn');
+  var btnLabel = btn ? btn.innerHTML : '';
+  if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Preparing…'; }
  try {
+  var ExcelJS = await loadExcelLib();
   var period = getPeriodDates();
   var filterLabel = period.label;
   var todayStr = new Date().toISOString().split('T')[0];
@@ -989,55 +1072,25 @@ function exportReport() {
   var absences = (state.absences || []).filter(function(a){ return a && a.date>=period.from && a.date<=period.to && a.date<=todayStr; });
   var bookings = (state.bookings || []).filter(function(b){ return b && b.date>=period.from && b.date<=period.to && b.date<=todayStr; });
 
-  function csvSafe(v){ return (v===undefined||v===null) ? '' : String(v); }
+  function str(v){ return (v===undefined||v===null) ? '' : String(v); }
+  function absKey(a){ return str(a.name)+'|'+str(a.date_from||a.date)+'|'+str(a.date_to||a.date)+'|'+str(a.session)+'|'+str(a.reason); }
 
-  // Build CSV content
-  var csv = 'Dental and Maxillofacial Outpatient Clinics - Activity Report\n';
-  csv += 'Period: ' + filterLabel + '\n';
-  csv += 'Generated: ' + new Date().toLocaleDateString('en-GB') + '\n\n';
-
-  csv += 'ABSENCES\n';
-  csv += 'Name,Type,Date From,Date To,Session,Reason\n';
-  var absGroups = {};
-  absences.forEach(function(a){
-    var key = csvSafe(a.name)+'|'+csvSafe(a.date_from||a.date)+'|'+csvSafe(a.date_to||a.date)+'|'+csvSafe(a.session)+'|'+csvSafe(a.reason);
-    if(!absGroups[key]) absGroups[key]={a:a};
-  });
-  Object.values(absGroups).forEach(function(g){
-    var a=g.a;
-    csv += '"'+csvSafe(a.name)+'","'+csvSafe(a.type)+'","'+csvSafe(a.date_from||a.date)+'","'+csvSafe(a.date_to||a.date)+'","'+csvSafe(SESS_FULL[a.session]||a.session)+'","'+csvSafe(a.reason)+'"\n';
-  });
-
-  csv += '\nBOOKINGS\n';
-  csv += 'Doctor,Clinic,Date,Session,From,To\n';
-  bookings.forEach(function(b){
-    csv += '"'+csvSafe(b.doctor)+'","'+csvSafe(b.clinic)+'","'+csvSafe(b.date)+'","'+csvSafe(SESS_FULL[b.session]||b.session)+'","'+csvSafe(b.time_from)+'","'+csvSafe(b.time_to)+'"\n';
-  });
-
-  // Generate the same OPEN_SLOT synthetic events used in renderLog (Dr. Sherif's old Mon/Tue AM Clinic 2 slot)
-  var SHERIF_LEAVE_EFFECTIVE_EXP = SHERIF_LEAVE_EFFECTIVE;
+  // Same OPEN_SLOT synthetic events used in renderLog (Dr. Sherif's old Mon/Tue AM Clinic 2 slot)
   var openSlotEventsExp = [];
   (function(){
-    var d = new Date(Math.max(new Date(period.from+'T00:00:00').getTime(), new Date(SHERIF_LEAVE_EFFECTIVE_EXP+'T00:00:00').getTime()));
+    var d = new Date(Math.max(new Date(period.from+'T00:00:00').getTime(), new Date(SHERIF_LEAVE_EFFECTIVE+'T00:00:00').getTime()));
     var end = new Date(Math.min(new Date(period.to+'T00:00:00').getTime(), new Date(todayStr+'T00:00:00').getTime()));
     while (d <= end) {
       var wd = d.getDay();
-      var dsExp = d.toISOString().split('T')[0];
+      var dsExp = fmt(d);
       if ((wd === 1 || wd === 2) && dsExp < MAGHRABI_START) { openSlotEventsExp.push({date: dsExp, session: 'morning'}); }
       d.setDate(d.getDate() + 1);
     }
   })();
 
-  csv += '\nUNSTAFFED OPEN SLOTS (Clinic 2, Mon/Tue AM, Dr. Sherif departure until Dr. Maghrabi joined)\n';
-  csv += 'Date,Session,Status\n';
-  openSlotEventsExp.forEach(function(o){
-    var wasBooked = bookings.some(function(b){ return b.date===o.date && b.session===o.session && b.clinic==='Clinic 2'; });
-    csv += '"'+csvSafe(o.date)+'","'+csvSafe(SESS_FULL[o.session]||o.session)+'","'+(wasBooked?'Booked':'Not utilized')+'"\n';
-  });
-
-  // Correlated export stats — same logic as renderLog
+  // Correlated stats — same logic as renderLog
   var sessHrs = {morning:4, afternoon:2.5, evening:4};
-  var freeSlotsExp = 0; var hoursLostExp = 0;
+  var freeSlotsExp = 0, hoursLostExp = 0;
   absences.forEach(function(a){
     var sessions = a.session==='all'?['morning','afternoon','evening']:[a.session||'morning'];
     sessions.forEach(function(sv){ var m=slotsFreedBy(a.name,a.date,sv); freeSlotsExp+=m; hoursLostExp+=(sessHrs[sv]||0)*m; });
@@ -1045,48 +1098,147 @@ function exportReport() {
   openSlotEventsExp.forEach(function(o){ freeSlotsExp+=1; hoursLostExp+=(sessHrs[o.session]||0); });
   hoursLostExp = Math.round(hoursLostExp*10)/10;
 
-  var hoursRecExp = 0; var utilizedExp = 0;
+  var hoursRecExp = 0, utilizedExp = 0;
+  function isLinked(b) {
+    return absences.some(function(a){ return a.date===b.date&&(a.session==='all'||a.session===b.session); }) ||
+           openSlotEventsExp.some(function(o){ return o.date===b.date && o.session===b.session; });
+  }
   bookings.forEach(function(b){
-    var hasAbs = absences.some(function(a){ return a.date===b.date&&(a.session==='all'||a.session===b.session); });
-    var hasOpenExp = openSlotEventsExp.some(function(o){ return o.date===b.date && o.session===b.session; });
-    if(hasAbs || hasOpenExp){
-      utilizedExp++;
-      var fromParts = (b.time_from||'0:0').split(':');
-      var toParts = (b.time_to||'0:0').split(':');
-      var from = (parseInt(fromParts[0])||0) + (parseInt(fromParts[1])||0)/60;
-      var to = (parseInt(toParts[0])||0) + (parseInt(toParts[1])||0)/60;
-      hoursRecExp+=Math.max(0,to-from);
-    }
+    if (isLinked(b)) { utilizedExp++; hoursRecExp += Math.max(0, hhmmToHours(b.time_to) - hhmmToHours(b.time_from)); }
   });
-  hoursRecExp=Math.round(hoursRecExp*10)/10;
+  hoursRecExp = Math.round(hoursRecExp*10)/10;
   var utilExp = freeSlotsExp>0?Math.min(100,Math.round((utilizedExp/freeSlotsExp)*100)):0;
   var hoursUtilExp = hoursLostExp>0?Math.min(100,Math.round((hoursRecExp/hoursLostExp)*100)):0;
-  var absGroupsExp = {};
-  absences.forEach(function(a){ var k=csvSafe(a.name)+'|'+csvSafe(a.date_from||a.date)+'|'+csvSafe(a.date_to||a.date)+'|'+csvSafe(a.session)+'|'+csvSafe(a.reason); if(!absGroupsExp[k]) absGroupsExp[k]=true; });
-  csv += '\nSUMMARY\n';
-  csv += 'Slots per week,51\n';
-  csv += 'Clinical hours per week,152h\n';
-  csv += 'Total absence events,' + Object.keys(absGroupsExp).length + '\n';
-  csv += 'Free slots (absences + unstaffed open slots),' + freeSlotsExp + '\n';
-  csv += 'Clinical hours lost,' + hoursLostExp + 'h\n';
-  csv += 'Correlated bookings made,' + utilizedExp + '\n';
-  csv += 'Clinical hours recovered,' + hoursRecExp + 'h\n';
-  csv += 'Slot utilization rate,' + utilExp + '%\n';
-  csv += 'Hour utilization rate,' + hoursUtilExp + '%\n';
 
-  // Download CSV
-  var blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'clinic-report-' + (logView || 'export') + '-' + period.from + '.csv';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // Absence events (one row per leave, like the log)
+  var absGroups = {}, absOrder = [];
+  absences.forEach(function(a){
+    var k = absKey(a);
+    if (!absGroups[k]) { absGroups[k] = {a:a, dates:[]}; absOrder.push(k); }
+    if (absGroups[k].dates.indexOf(a.date) === -1) absGroups[k].dates.push(a.date);
+  });
+
+  var capAsOf = (period.to < todayStr ? period.to : todayStr);
+  var cap = weeklyCapacity(capAsOf);
+
+  // ── Workbook ──
+  var BLUE = 'FF1565C0';
+  var wb = new ExcelJS.Workbook();
+  wb.creator = 'Clinic Availability'; wb.created = new Date();
+
+  function dataSheet(name, columns) {
+    var ws = wb.addWorksheet(name, {views: [{state: 'frozen', ySplit: 1}]});
+    ws.columns = columns;
+    var head = ws.getRow(1);
+    head.font = {bold: true, color: {argb: 'FFFFFFFF'}};
+    head.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: BLUE}};
+    head.alignment = {vertical: 'middle'};
+    head.height = 20;
+    ws.autoFilter = {from: {row: 1, column: 1}, to: {row: 1, column: columns.length}};
+    return ws;
+  }
+  var DATE_FMT = 'ddd dd/mm/yyyy';
+
+  // Summary
+  var sum = wb.addWorksheet('Summary');
+  sum.columns = [{width: 46}, {width: 26}];
+  sum.addRow(['Dental and Maxillofacial Outpatient Clinics']).font = {bold: true, size: 14, color: {argb: BLUE}};
+  sum.addRow(['Activity Report']).font = {bold: true, size: 12};
+  sum.addRow(['Period', filterLabel]);
+  sum.addRow(['Generated', new Date().toLocaleString('en-GB', {day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'})]);
+  sum.addRow([]);
+  var sh = sum.addRow(['Measure', 'Value']);
+  sh.font = {bold: true, color: {argb: 'FFFFFFFF'}};
+  sh.eachCell(function(c){ c.fill = {type: 'pattern', pattern: 'solid', fgColor: {argb: BLUE}}; });
+  [
+    ['Clinic slots per week', cap.slots],
+    ['Clinical hours per week', cap.hours],
+    ['Absence events', absOrder.length],
+    ['Free slots (absences + unstaffed open slots)', freeSlotsExp],
+    ['Clinical hours lost', hoursLostExp],
+    ['Bookings made in free slots', utilizedExp],
+    ['Clinical hours recovered', hoursRecExp],
+    ['Slot utilization rate', utilExp / 100, '0%'],
+    ['Hour utilization rate', hoursUtilExp / 100, '0%']
+  ].forEach(function(r){
+    var row = sum.addRow([r[0], r[1]]);
+    var c = row.getCell(2);
+    c.alignment = {horizontal: 'right'};
+    if (r[2]) c.numFmt = r[2];
+  });
+  sum.getCell('A3').font = {bold: true}; sum.getCell('A4').font = {bold: true};
+
+  // Absences
+  var wsA = dataSheet('Absences', [
+    {header: 'Name', key: 'name', width: 22},
+    {header: 'Type', key: 'type', width: 11},
+    {header: 'From', key: 'from', width: 17, style: {numFmt: DATE_FMT}},
+    {header: 'To', key: 'to', width: 17, style: {numFmt: DATE_FMT}},
+    {header: 'Working days in period', key: 'days', width: 22},
+    {header: 'Session', key: 'session', width: 24},
+    {header: 'Reason', key: 'reason', width: 30}
+  ]);
+  absOrder.map(function(k){ return absGroups[k]; })
+    .sort(function(x, y){ return str(x.a.date_from||x.a.date).localeCompare(str(y.a.date_from||y.a.date)) || str(x.a.name).localeCompare(str(y.a.name)); })
+    .forEach(function(g){
+      var a = g.a, t = str(a.type);
+      wsA.addRow({
+        name: str(a.name),
+        type: t ? t.charAt(0).toUpperCase() + t.slice(1) : '',
+        from: xlDateFromYmd(a.date_from || a.date),
+        to: xlDateFromYmd(a.date_to || a.date),
+        days: g.dates.length,
+        session: a.session === 'all' ? 'Full day' : (SESS_FULL[a.session] || str(a.session)),
+        reason: str(a.reason)
+      });
+    });
+
+  // Bookings
+  var wsB = dataSheet('Bookings', [
+    {header: 'Date', key: 'date', width: 17, style: {numFmt: DATE_FMT}},
+    {header: 'Doctor', key: 'doctor', width: 22},
+    {header: 'Clinic', key: 'clinic', width: 10},
+    {header: 'Session', key: 'session', width: 24},
+    {header: 'From', key: 'from', width: 8},
+    {header: 'To', key: 'to', width: 8},
+    {header: 'Hours', key: 'hours', width: 8, style: {numFmt: '0.0'}},
+    {header: 'Free slot (absence / open slot)', key: 'linked', width: 18}
+  ]);
+  bookings.slice()
+    .sort(function(x, y){ return str(x.date).localeCompare(str(y.date)) || str(x.time_from).localeCompare(str(y.time_from)); })
+    .forEach(function(b){
+      wsB.addRow({
+        date: xlDate(keyToLocalDate(b.date)),
+        doctor: str(b.doctor), clinic: str(b.clinic),
+        session: SESS_FULL[b.session] || str(b.session),
+        from: str(b.time_from), to: str(b.time_to),
+        hours: Math.max(0, hhmmToHours(b.time_to) - hhmmToHours(b.time_from)),
+        linked: isLinked(b) ? 'Yes' : 'No'
+      });
+    });
+
+  // Unstaffed open slots (only periods between Dr. Sherif's departure and Dr. Maghrabi's start have any)
+  if (openSlotEventsExp.length) {
+    var wsO = dataSheet('Unstaffed slots', [
+      {header: 'Date', key: 'date', width: 17, style: {numFmt: DATE_FMT}},
+      {header: 'Clinic', key: 'clinic', width: 10},
+      {header: 'Session', key: 'session', width: 24},
+      {header: 'Status', key: 'status', width: 14}
+    ]);
+    openSlotEventsExp.forEach(function(o){
+      var wasBooked = bookings.some(function(b){ return b.date===o.date && b.session===o.session && b.clinic==='Clinic 2'; });
+      wsO.addRow({date: xlDate(keyToLocalDate(o.date)), clinic: 'Clinic 2', session: SESS_FULL[o.session] || o.session, status: wasBooked ? 'Booked' : 'Not utilized'});
+    });
+  }
+
+  var buf = await wb.xlsx.writeBuffer();
+  var fileName = 'Clinic-Report_' + filterLabel.replace(/\s*→\s*/, '_to_').replace(/\//g, '-').replace(/\s+/g, '-') + '.xlsx';
+  await saveBlob(new Blob([buf], {type: XLSX_MIME}), fileName);
  } catch(err) {
   console.error('Export error:', err);
   alert('Export failed: ' + err.message);
+ } finally {
+  if (btn) { btn.disabled = false; btn.innerHTML = btnLabel; }
  }
 }
 
@@ -1098,7 +1250,7 @@ function toggleOther() {
 
 function populateAbsStaff() {
   var type = document.getElementById('abs-type').value;
-  var list = type === 'doctor' ? state.doctors.filter(function(d){ return d.name !== 'Dr. Sherif'; }).map(function(d) { return d.name; }) : state.assistants;
+  var list = type === 'doctor' ? state.doctors.filter(isCurrentStaff).map(function(d) { return d.name; }) : state.assistants;
   document.getElementById('abs-name').innerHTML = list.map(function(n) { return '<option>' + n + '</option>'; }).join('');
 }
 
@@ -1428,7 +1580,7 @@ function statusBadge(name) {
 function renderStaff() {
   // Group doctors by specialty (excluding former staff kept only for historical schedule records)
   var groups = {};
-  state.doctors.filter(function(d){ return d.name !== 'Dr. Sherif'; }).forEach(function(d) {
+  state.doctors.filter(isCurrentStaff).forEach(function(d) {
     if (!groups[d.spec]) groups[d.spec] = [];
     groups[d.spec].push(d);
   });
@@ -1600,7 +1752,7 @@ function openBookingModal(di, sv, cl, ds, docName, spec) {
   document.getElementById('modal-sub').textContent = DAYS[di] + ' — ' + SESS_FULL[sv] + bookingNote;
 
   var sel = document.getElementById('modal-doctor');
-  sel.innerHTML = state.doctors.filter(function(d){ return d.name !== 'Dr. Sherif'; }).map(function(d) {
+  sel.innerHTML = state.doctors.filter(isCurrentStaff).map(function(d) {
     return '<option value="' + d.name + '">' + d.name + ' (' + d.spec + ')</option>';
   }).join('');
 
