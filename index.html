@@ -180,7 +180,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 </head>
 <body>
 <!-- ==== PASSCODE GATE (client-side, weak — public deterrent only) ==== -->
-
+<!-- Must stay in the source file. Never upload a copy saved from the browser: unlocking removes this block from the live page, so a saved copy has no gate. -->
+<div id="pcGate" style="position:fixed;inset:0;z-index:999999;background:linear-gradient(135deg,#1565C0,#0D47A1);display:flex;align-items:center;justify-content:center;padding:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <div style="background:#fff;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,0.25);padding:26px 22px;width:100%;max-width:340px;text-align:center;">
+    <img src="./icon-192.png" alt="" style="width:56px;height:56px;border-radius:14px;object-fit:cover;display:block;margin:0 auto 12px;">
+    <div style="font-size:18px;font-weight:700;color:#1a1a1a;">Clinic Availability</div>
+    <div style="font-size:12px;color:#757575;margin:4px 0 18px;">Dental and Maxillofacial Outpatient Clinics</div>
+    <input id="pcInput" type="password" inputmode="numeric" autocomplete="off" placeholder="Enter passcode" style="width:100%;padding:12px 14px;border:1.5px solid #E0E0E0;border-radius:12px;font-size:16px;font-family:inherit;text-align:center;outline:none;">
+    <div id="pcErr" style="display:none;color:#E53935;font-size:12px;font-weight:600;margin-top:8px;">Wrong passcode, try again</div>
+    <button id="pcBtn" type="button" style="width:100%;margin-top:12px;padding:12px;border:none;border-radius:12px;background:#1565C0;color:#fff;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;">Enter</button>
+  </div>
+</div>
 <script>
 (function(){
   var GATE_HASH = "5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5";
@@ -443,12 +453,12 @@ var state = {
     {name:'Dr. Noran', spec:'Orthodontist'},
     {name:'Dr. Amira', spec:'Fixed Prosthodontist'},
     {name:'Dr. Iina', spec:'Orthodontist'},
-    {name:'Dr. Wael', spec:'Operative', note:'Clinic 5 \u2014 Inpatients'}, // moved off the outpatient grid 2026-09-06
+    {name:'Dr. Wael', spec:'Operative', note:'Clinic 5 \u2014 Inpatients'}, // off the outpatient grid 2026-09-06; back on it from 2026-11-08 with Dr. Rami's clinics - see RAMI_END
     {name:'Dr. Ghaidaa', spec:'Restorative'}, // 2026-09-06 to 2026-10-29 - see GHAIDAA_START / GHAIDAA_END; kept for historical records
     {name:'Dr. Mawadah', spec:'Orthodontist'},
     {name:'Dr. Mohamed Alqarni', spec:'Special Needs'},
     {name:'Dr. Maghrabi', spec:'Endodontist'}, // joined 2026-09-06 - see MAGHRABI_START
-    {name:'Dr. Rami', spec:'Restorative'}, // joined 2026-10-18 - see RAMI_START
+    {name:'Dr. Rami', spec:'Restorative'}, // 2026-10-18 to 2026-11-07 - see RAMI_START / RAMI_END; kept for historical records
     {name:'Saad', spec:'Dental Hygienist', note:'Works in Dr. Nehal\'s clinic', noClinic:true}, // no clinic of his own; can book free clinics
     {name:'Dr. Sherif', spec:'Endodontist'}, // kept for historical records before 2026-06-27 only
     {name:'Surgery', spec:'Surgery'} // Surgery team = one doctor: owns its blocks, bookable, can be marked absent
@@ -469,14 +479,23 @@ var GHAIDAA_START  = '2026-09-06';         // first day Dr. Ghaidaa takes over D
 var RAMI_START     = '2026-10-18';         // first day Dr. Rami takes Mon eve Clinic 2 (was Dr. Fatima) and Thu PM Clinic 3 (was Dr. Amira)
 var GHAIDAA_END    = '2026-11-01';         // first day of the schedule without Dr. Ghaidaa: Dr. Rami takes Tue PM + Eve Clinic 2 and
                                            // Thu AM Clinic 2 (consultation); Dr. Wael takes Thu PM Clinic 1 (consultation)
+var RAMI_END       = '2026-11-08';         // first day without Dr. Rami: Dr. Wael takes all his clinics (Mon Eve Clinic 2, Tue PM + Eve
+                                           // Clinic 2, Thu AM Clinic 2 consultation, Thu PM Clinic 3); Dr. Noran takes Thu PM Clinic 1 (consultation)
 // Keep these change-over dates on a Sunday: the grid compares them with UTC day keys, which run one day behind Riyadh time.
 
 // Staff who have left: hidden from the staff list and dropdowns from this date, kept for historical weeks and reports.
-var STAFF_LEFT = {'Dr. Sherif': SHERIF_LEAVE_EFFECTIVE, 'Dr. Ghaidaa': GHAIDAA_END};
+var STAFF_LEFT = {'Dr. Sherif': SHERIF_LEAVE_EFFECTIVE, 'Dr. Ghaidaa': GHAIDAA_END, 'Dr. Rami': RAMI_END};
 function isCurrentStaff(d) { var left = STAFF_LEFT[d.name]; return !left || ymdLocal(new Date()) < left; }
 
 // Resolves who actually held a slot on a given date, so historical weeks stay accurate.
 function resolveDoctor(doc, di, sv, cl, dateStr) {
+  if (dateStr < RAMI_END) {
+    if (cl === 'Clinic 2' && di === 1 && sv === 'evening') { doc = 'Dr. Rami'; }
+    else if (cl === 'Clinic 2' && di === 2 && (sv === 'afternoon' || sv === 'evening')) { doc = 'Dr. Rami'; }
+    else if (cl === 'Clinic 2' && di === 4 && sv === 'morning') { doc = 'Dr. Rami (Consultation)'; }
+    else if (cl === 'Clinic 3' && di === 4 && sv === 'afternoon') { doc = 'Dr. Rami'; }
+    else if (cl === 'Clinic 1' && di === 4 && sv === 'afternoon') { doc = 'Dr. Wael (Consultation)'; }
+  }
   if (dateStr < GHAIDAA_END) {
     if (cl === 'Clinic 2' && di === 2 && (sv === 'afternoon' || sv === 'evening')) { doc = 'Dr. Ghaidaa'; }
     else if (cl === 'Clinic 2' && di === 4 && sv === 'morning') { doc = 'Dr. Ghaidaa'; }
@@ -542,7 +561,7 @@ function loadSchedule() {
   a(1,'afternoon','Clinic 3','Dr. Nehal','Dana / Ebtehal');
   a(1,'afternoon','Clinic 4','Dr. Amira','Melani / Amani H');
   a(1,'evening','Clinic 1','','');
-  a(1,'evening','Clinic 2','Dr. Rami','Kholood');
+  a(1,'evening','Clinic 2','Dr. Wael','Kholood'); // Dr. Rami before RAMI_END
   a(1,'evening','Clinic 3','Dr. Iina','Ebtehal');
   a(1,'evening','Clinic 4','Dr. Amira','Meelani');
   a(2,'morning','Clinic 1',SRG,'Ahlam');
@@ -550,11 +569,11 @@ function loadSchedule() {
   a(2,'morning','Clinic 3','Dr. Howaidi','Ebtehal');
   a(2,'morning','Clinic 4','Dr. Noran','Melani / Amani H');
   a(2,'afternoon','Clinic 1',SRG,'Ahlam / Amani T');
-  a(2,'afternoon','Clinic 2','Dr. Rami','Adawiya / Kholood'); // Dr. Ghaidaa before GHAIDAA_END
+  a(2,'afternoon','Clinic 2','Dr. Wael','Adawiya / Kholood'); // Dr. Rami before RAMI_END, Dr. Ghaidaa before GHAIDAA_END
   a(2,'afternoon','Clinic 3','Dr. Iina','Ebtehal / Dana');
   a(2,'afternoon','Clinic 4','Dr. Mawadah','Melani / Amani H');
   a(2,'evening','Clinic 1','Dr. Kariem','');
-  a(2,'evening','Clinic 2','Dr. Rami','Amani T'); // Dr. Ghaidaa before GHAIDAA_END
+  a(2,'evening','Clinic 2','Dr. Wael','Amani T'); // Dr. Rami before RAMI_END, Dr. Ghaidaa before GHAIDAA_END
   a(2,'evening','Clinic 3','Dr. Nehal (Hyg. Saad)','');
   a(2,'evening','Clinic 4','Dr. Mawadah','Dania');
   a(3,'morning','Clinic 1','Dr. Kariem','Dania / Amani T');
@@ -570,12 +589,12 @@ function loadSchedule() {
   a(3,'evening','Clinic 3','Dr. Nehal','Monerah');
   a(3,'evening','Clinic 4','','');
   a(4,'morning','Clinic 1',SRG,'Amani T / Ahlam');
-  a(4,'morning','Clinic 2','Dr. Rami (Consultation)','Adawiya / Kholood'); // Dr. Ghaidaa before GHAIDAA_END
+  a(4,'morning','Clinic 2','Dr. Wael (Consultation)','Adawiya / Kholood'); // Dr. Rami before RAMI_END, Dr. Ghaidaa before GHAIDAA_END
   a(4,'morning','Clinic 3','Dr. Amira','Ebtehal / Dana');
   a(4,'morning','Clinic 4','Dr. Mawadah','Melani / Amani H');
-  a(4,'afternoon','Clinic 1','Dr. Wael (Consultation)','Amani T / Ahlam'); // Dr. Ghaidaa (Consultation) before GHAIDAA_END
+  a(4,'afternoon','Clinic 1','Dr. Noran (Consultation)','Amani T / Ahlam'); // Dr. Wael (Consultation) before RAMI_END, Dr. Ghaidaa (Consultation) before GHAIDAA_END
   a(4,'afternoon','Clinic 2','Dr. Fatima','Adawiya / Kholood');
-  a(4,'afternoon','Clinic 3','Dr. Rami','Ebtehal / Dana');
+  a(4,'afternoon','Clinic 3','Dr. Wael','Ebtehal / Dana'); // Dr. Rami before RAMI_END
   a(4,'afternoon','Clinic 4','Dr. Iina','Amani H / Melani');
 }
 
