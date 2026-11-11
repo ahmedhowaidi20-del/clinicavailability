@@ -246,6 +246,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div style="text-align:center;margin-bottom:8px;">
     <button onclick="goToThisWeek()" style="background:linear-gradient(135deg,#1976D2,#1565C0);border:none;border-radius:99px;padding:7px 20px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(21,101,192,0.3);" fdprocessedid="2pu5rd">⭐ This Week</button>
+    <button id="word-btn" onclick="exportWeekDocx()" title="Download this week as the printable clinic schedule (Word)" style="margin-left:6px;background:linear-gradient(135deg,#2B579A,#1E3F73);border:none;border-radius:99px;padding:7px 16px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(43,87,154,0.3);">📄 Word</button>
   </div>
 
   <div id="schedule-view"><div class="day-block today-block"><div class="day-title"><span>Sunday <span class="today-badge">TODAY</span></span><span class="ddate">Sun 20 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-free" onclick="openBookingModal(0,&#39;afternoon&#39;,&#39;Clinic 4&#39;,&#39;2026-09-19&#39;,&#39;Dr.Noran&#39;,&#39;Orthodontist&#39;)"><span class="free-top">FREE 📅</span><span class="free-doc">Dr.Noran</span><span class="free-spec">Orthodontist</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-booked" style="background:linear-gradient(135deg,#333,#111)"><span class="booked-top">FULLY BOOKED</span><span class="booked-doc" onclick="event.stopPropagation();openCancelModal(&#39;1a900003-2102-43b8-8b31-bf0785d60208&#39;)" style="cursor:pointer;display:block;border-bottom:0.5px solid rgba(255,255,255,0.15);padding:1px 0;">Dr.Noran 16:00-20:00</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Monday</span><span class="ddate">Mon 21 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Tuesday</span><span class="ddate">Tue 22 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-booked" style="background:linear-gradient(135deg,#333,#111)"><span class="booked-top">FULLY BOOKED</span><span class="booked-doc" onclick="event.stopPropagation();openCancelModal(&#39;0e11ff2d-2ee2-4fc5-a59b-6c959124e5c5&#39;)" style="cursor:pointer;display:block;border-bottom:0.5px solid rgba(255,255,255,0.15);padding:1px 0;">Dr.Amira 08:30-12:30</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span><span class="sp-note">(Hygiene)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Wednesday</span><span class="ddate">Wed 23 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td><td><div class="dc dc-empty">-</div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Thursday</span><span class="ddate">Thu 24 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th" style="background:#E6A817;">-</th><th class="thu-th">Clinic 1</th><th class="thu-th">Clinic 2</th><th class="thu-th">Clinic 3</th><th class="thu-th">Clinic 4</th></tr></thead><tbody><tr><td class="sess-td thu-sess">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span></div></td></tr><tr><td class="sess-td thu-sess">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Friday</span><span class="ddate">Fri 25 Sept</span></div><div class="weekend-block"><span class="weekend-label">🌙 Weekend — No Clinics</span></div></div><div class="day-block"><div class="day-title"><span>Saturday</span><span class="ddate">Sat 26 Sept</span></div><div class="weekend-block"><span class="weekend-label">🌙 Weekend — No Clinics</span></div></div></div>
@@ -1321,6 +1322,249 @@ async function deleteGroup(ids) {
   renderSchedule();
   // Refresh log if it's currently visible
   if (document.getElementById('panel-log').classList.contains('active')) { renderLog(); }
+}
+
+// ── WORD EXPORT: the week on screen as the department's printable clinic schedule ──
+// Same template as the printed schedule (A4 landscape, one page, Clinics 1–5, Dr. Fatima's sign-off).
+// Shows the regular weekly grid for the selected week (absences and bookings are not part of it),
+// each day resolved through resolveDoctor() exactly as the Schedule tab shows it.
+var DOCX_URLS = [
+  'https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.iife.js',
+  'https://unpkg.com/docx@9.5.1/dist/index.iife.js'
+];
+var DOCX_MIME = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+var _docxLibPromise = null;
+function loadDocxLib() {
+  if (window.docx && window.docx.Packer) return Promise.resolve(window.docx);
+  if (_docxLibPromise) return _docxLibPromise;
+  _docxLibPromise = new Promise(function(resolve, reject) {
+    var i = 0;
+    (function tryNext() {
+      if (i >= DOCX_URLS.length) {
+        _docxLibPromise = null;
+        reject(new Error('could not load the Word library — check the internet connection and try again'));
+        return;
+      }
+      var s = document.createElement('script');
+      s.src = DOCX_URLS[i++]; s.async = true;
+      s.onload = function() { if (window.docx && window.docx.Packer) resolve(window.docx); else { s.remove(); tryNext(); } };
+      s.onerror = function() { s.remove(); tryNext(); };
+      document.head.appendChild(s);
+    })();
+  });
+  return _docxLibPromise;
+}
+
+// ---- print conventions (the printed template; not part of the on-screen grid) ----
+var PRINT_NAME_FIX = {'Dr. Iina': 'Dr. Lina'};                 // app spelling -> printed spelling
+var PRINT_ER_SLOTS = [                                          // "*" Dental ER
+  '0|morning|Clinic 2','0|afternoon|Clinic 2','1|morning|Clinic 2','1|afternoon|Clinic 2',
+  '2|morning|Clinic 2','2|afternoon|Clinic 2','3|morning|Clinic 3','3|afternoon|Clinic 2',
+  '4|morning|Clinic 2','4|afternoon|Clinic 3'
+];
+var PRINT_STAFF_CONSULT_SLOTS = ['4|morning|Clinic 2'];         // "(Consultation)" here prints as "^"
+var PRINT_CLINIC5_PM = ['Dr. Wael','Dr. Wael','Dr. Howaidi','Dr. Wael','Dr. Howaidi']; // Sun..Thu inpatient cover
+
+function printCellName(raw, di, sv, cl) {
+  var doc = String(raw || '').trim();
+  if (!doc || doc === 'OPEN_SLOT') return '';
+  var hygiene = '';
+  var hyg = doc.match(/\s*\(Hyg\.?\s*([^)]*)\)\s*$/i);
+  if (hyg) { hygiene = '|(Hygiene – ' + hyg[1].trim() + ')'; doc = doc.replace(hyg[0], ''); }
+  var consult = false;
+  if (/\s*\(Consultation\)\s*$/.test(doc)) { consult = true; doc = doc.replace(/\s*\(Consultation\)\s*$/, ''); }
+  doc = doc.replace(/\s*\([^)]*\)\s*$/, ''); // any other note is left off the print
+  doc = PRINT_NAME_FIX[doc] || doc;
+  var key = di + '|' + sv + '|' + cl;
+  var marks = '';
+  if (PRINT_ER_SLOTS.indexOf(key) >= 0) marks += '*';
+  if (consult) marks += PRINT_STAFF_CONSULT_SLOTS.indexOf(key) >= 0 ? '^' : '#';
+  return doc + marks + hygiene;
+}
+
+function weekPrintRows(sun) {
+  var SESS = [['morning','AM'],['afternoon','PM'],['evening','Evening']];
+  var rows = [];
+  for (var di = 0; di < 5; di++) {
+    var date = new Date(sun.getTime()); date.setDate(sun.getDate() + di);
+    var dsUTC = fmt(date); // same date key the Schedule tab passes to resolveDoctor()
+    for (var si = 0; si < SESS.length; si++) {
+      var sv = SESS[si][0];
+      if (di === 4 && sv === 'evening') continue; // Thursday: morning and afternoon only
+      var cells = CLINICS.map(function(cl) {
+        var slot = state.schedule[sk(di, sv, cl)] || {};
+        return printCellName(resolveDoctor(slot.doctor || '', di, sv, cl, dsUTC), di, sv, cl);
+      });
+      var c5 = sv === 'morning' ? 'Surgery' : sv === 'afternoon' ? 'INPT:' + PRINT_CLINIC5_PM[di] : '';
+      rows.push([si === 0 ? DAYS[di] : '', SESS[si][1]].concat(cells, [c5]));
+    }
+  }
+  return rows;
+}
+
+function buildScheduleDoc(D, rows, validFrom, validTo) {
+  var Document = D.Document, Paragraph = D.Paragraph, TextRun = D.TextRun, Table = D.Table, TableRow = D.TableRow,
+      TableCell = D.TableCell, WidthType = D.WidthType, AlignmentType = D.AlignmentType, VerticalAlign = D.VerticalAlign,
+      ShadingType = D.ShadingType, BorderStyle = D.BorderStyle, PageOrientation = D.PageOrientation, HeightRule = D.HeightRule;
+
+  var FONT = 'Calibri';
+  var INK = '1F2933', MUTED = '5B6770', GRID = '9AA5AE';
+  var HEAD_BG = '1F3A5F', DAY_BG = 'E3E8EE', EVE_BG = 'F7EEF2', INPT_BG = 'EEF3F8';
+  var BLUE = '2F5D9E', PLUM = '9B2F6A', MAUVE = 'A0708C';
+  function colorFor(t) {
+    return t.indexOf('Howaidi') >= 0 ? BLUE :
+      (t.indexOf('Surgery') >= 0 || t.indexOf('Noran') >= 0) ? PLUM :
+      t.indexOf('Nehal') >= 0 ? MAUVE : INK;
+  }
+  var NONE = {style: BorderStyle.NONE, size: 0, color: 'FFFFFF'};
+  var NO_BORDERS = {top: NONE, bottom: NONE, left: NONE, right: NONE};
+  function thin(c) { return {style: BorderStyle.SINGLE, size: 4, color: c || GRID}; }
+  function thick(c) { return {style: BorderStyle.SINGLE, size: 12, color: c || INK}; }
+  function run(text, o) {
+    o = o || {};
+    return new TextRun({text: text, font: FONT, size: o.size != null ? o.size : 23, bold: o.bold != null ? o.bold : true, color: o.color || INK});
+  }
+  function para(children, o) {
+    o = o || {};
+    return new Paragraph({children: children, alignment: o.align || AlignmentType.CENTER, spacing: {before: 0, after: o.after || 0, line: 240}});
+  }
+
+  var groupSize = {};
+  rows.forEach(function(r, i) { if (r[0]) { var n = 1; while (rows[i + n] && !rows[i + n][0]) n++; groupSize[r[0]] = n; } });
+
+  var TABLE_W = 15700, DAY_W = 1560, SESS_W = 1280, CLIN_W = 2572;
+  var colW = [DAY_W, SESS_W, CLIN_W, CLIN_W, CLIN_W, CLIN_W, CLIN_W];
+  var ROW_H = 510;
+  var MARG = {top: 30, bottom: 30, left: 80, right: 80};
+
+  function content(text) {
+    if (!text) return [para([])];
+    if (text.indexOf('INPT:') === 0) {
+      var n = text.slice(5);
+      return [para([run(n, {color: colorFor(n)}), run(' (Inpatients)', {size: 18, bold: false, color: MUTED})])];
+    }
+    if (text.indexOf('|') >= 0) {
+      var parts = text.split('|');
+      return [para([run(parts[0], {color: colorFor(parts[0])}), run(' ' + parts[1], {size: 18, bold: false, color: MUTED})])];
+    }
+    return [para([run(text, {color: colorFor(text)})])];
+  }
+  function cell(children, width, o) {
+    o = o || {};
+    return new TableCell({
+      children: children, width: {size: width, type: WidthType.DXA},
+      verticalAlign: VerticalAlign.CENTER, margins: MARG,
+      rowSpan: o.rowSpan, columnSpan: o.columnSpan,
+      shading: o.fill ? {fill: o.fill, type: ShadingType.CLEAR, color: 'auto'} : undefined,
+      borders: o.borders
+    });
+  }
+
+  var headerRow = new TableRow({
+    tableHeader: true,
+    height: {value: 520, rule: HeightRule.ATLEAST},
+    children: [cell([para([])], DAY_W, {fill: HEAD_BG}), cell([para([])], SESS_W, {fill: HEAD_BG})].concat(
+      [1, 2, 3, 4, 5].map(function(i) { return cell([para([run('Clinic ' + i, {color: 'FFFFFF'})])], CLIN_W, {fill: HEAD_BG}); }))
+  });
+
+  var bodyRows = rows.map(function(r) {
+    var day = r[0], sess = r[1], clinics = r.slice(2);
+    var topB = day ? {top: thick()} : {};
+    var isEve = sess === 'Evening';
+    var children = [];
+    if (day) children.push(cell([para([run(day, {size: 24})])], DAY_W, {rowSpan: groupSize[day], fill: DAY_BG, borders: topB}));
+    children.push(cell([para([run(sess, {size: 21})])], SESS_W, {fill: isEve ? EVE_BG : undefined, borders: topB}));
+    clinics.forEach(function(c) {
+      var isInpt = typeof c === 'string' && c.indexOf('INPT:') === 0;
+      children.push(cell(content(c), CLIN_W, {fill: isInpt ? INPT_BG : (isEve ? EVE_BG : undefined), borders: topB}));
+    });
+    return new TableRow({height: {value: ROW_H, rule: HeightRule.ATLEAST}, children: children});
+  });
+
+  var grid = new Table({
+    width: {size: TABLE_W, type: WidthType.DXA}, columnWidths: colW,
+    borders: {top: thick(), bottom: thick(), left: thick(), right: thick(), insideHorizontal: thin(), insideVertical: thin()},
+    rows: [headerRow].concat(bodyRows)
+  });
+
+  var PER_W = 7200, TITLE_W = TABLE_W - PER_W;
+  var NB = {top: NONE, bottom: NONE, left: NONE, right: NONE, insideHorizontal: NONE, insideVertical: NONE};
+  var ZERO = {top: 0, bottom: 0, left: 0, right: 0};
+  var headerTable = new Table({
+    width: {size: TABLE_W, type: WidthType.DXA}, columnWidths: [TITLE_W, PER_W], borders: NB,
+    rows: [new TableRow({children: [
+      new TableCell({
+        width: {size: TITLE_W, type: WidthType.DXA}, verticalAlign: VerticalAlign.BOTTOM, margins: ZERO, borders: NO_BORDERS,
+        children: [
+          para([run('Outpatient Clinic Schedule', {size: 44})], {align: AlignmentType.LEFT}),
+          para([run('Dental & Maxillofacial Department  ·  King Abdullah Medical City, Makkah', {size: 23, bold: false, color: MUTED})], {align: AlignmentType.LEFT})
+        ]
+      }),
+      new TableCell({
+        width: {size: PER_W, type: WidthType.DXA}, verticalAlign: VerticalAlign.BOTTOM,
+        margins: {top: 0, bottom: 40, left: 0, right: 0}, borders: NO_BORDERS,
+        children: [para([
+          run('From: ', {size: 24, bold: false, color: MUTED}), run(validFrom, {size: 24}),
+          run('        To: ', {size: 24, bold: false, color: MUTED}), run(validTo, {size: 24})
+        ], {align: AlignmentType.RIGHT})]
+      })
+    ]})]
+  });
+
+  var SIG_W = 6000, LEG_W = TABLE_W - SIG_W;
+  var footerTable = new Table({
+    width: {size: TABLE_W, type: WidthType.DXA}, columnWidths: [LEG_W, SIG_W], borders: NB,
+    rows: [new TableRow({children: [
+      new TableCell({width: {size: LEG_W, type: WidthType.DXA}, verticalAlign: VerticalAlign.TOP, margins: ZERO, borders: NO_BORDERS,
+        children: [para([
+          run('#', {size: 21}), run('  Dental clearance and consultation clinic      ', {size: 21, bold: false}),
+          run('*', {size: 21}), run('  Dental ER      ', {size: 21, bold: false}),
+          run('^', {size: 21}), run('  Staff consultation', {size: 21, bold: false})
+        ], {align: AlignmentType.LEFT})]}),
+      new TableCell({width: {size: SIG_W, type: WidthType.DXA}, verticalAlign: VerticalAlign.TOP, margins: ZERO, borders: NO_BORDERS,
+        children: [
+          para([run('Dr. Fatima Al Qarni', {size: 24})]),
+          para([run('Department Manager, Dental & Maxillofacial Department', {size: 19, bold: false, color: MUTED})])
+        ]})
+    ]})]
+  });
+
+  function gap(pts) { return new Paragraph({children: [], spacing: {before: 0, after: 0, line: pts * 20, lineRule: 'exact'}}); }
+
+  return new Document({
+    creator: 'Dr. Ahmed Howaidi',
+    title: 'Outpatient Clinic Schedule – Dental & Maxillofacial Department',
+    styles: {default: {document: {run: {font: FONT, size: 22}, paragraph: {spacing: {before: 0, after: 0}}}}},
+    sections: [{
+      properties: {page: {
+        size: {width: 11906, height: 16838, orientation: PageOrientation.LANDSCAPE},
+        margin: {top: 454, bottom: 340, left: 567, right: 567, header: 200, footer: 200}
+      }},
+      children: [headerTable, gap(9), grid, gap(10), footerTable, gap(1)]
+    }]
+  });
+}
+
+async function exportWeekDocx() {
+  var btn = document.getElementById('word-btn');
+  var label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Preparing…'; }
+  try {
+    var D = await loadDocxLib();
+    var sun = getCurrentSunday();
+    var thu = new Date(sun.getTime()); thu.setDate(sun.getDate() + 4);
+    function longDate(d) { return d.toLocaleDateString('en-GB', {weekday: 'long'}) + ' ' + d.getDate() + ' ' + d.toLocaleDateString('en-GB', {month: 'long'}) + ' ' + d.getFullYear(); }
+    function shortTag(d) { return d.getDate() + d.toLocaleDateString('en-GB', {month: 'short'}).slice(0, 3); }
+    var doc = buildScheduleDoc(D, weekPrintRows(sun), longDate(sun), longDate(thu));
+    var blob = await D.Packer.toBlob(doc);
+    if (blob.type !== DOCX_MIME) blob = new Blob([blob], {type: DOCX_MIME});
+    await saveBlob(blob, 'Dental_Clinic_Schedule_' + shortTag(sun) + '-' + shortTag(thu) + thu.getFullYear() + '.docx');
+  } catch (err) {
+    console.error('Word export error:', err);
+    alert('Word export failed: ' + err.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = label; }
+  }
 }
 
 function renderSchedule() {
