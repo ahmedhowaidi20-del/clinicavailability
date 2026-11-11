@@ -481,6 +481,7 @@ var GHAIDAA_END    = '2026-11-01';         // first day of the schedule without 
                                            // Thu AM Clinic 2 (consultation); Dr. Wael takes Thu PM Clinic 1 (consultation)
 var RAMI_END       = '2026-11-08';         // first day without Dr. Rami: Dr. Wael takes all his clinics (Mon Eve Clinic 2, Tue PM + Eve
                                            // Clinic 2, Thu AM Clinic 2 consultation, Thu PM Clinic 3); Dr. Noran takes Thu PM Clinic 1 (consultation)
+var WAEL_MON_EVE_END = '2026-11-15';       // first day Dr. Wael no longer holds Mon Eve Clinic 2: the slot is empty from then
 // Keep these change-over dates on a Sunday: the grid compares them with UTC day keys, which run one day behind Riyadh time.
 
 // Staff who have left: hidden from the staff list and dropdowns from this date, kept for historical weeks and reports.
@@ -489,6 +490,7 @@ function isCurrentStaff(d) { var left = STAFF_LEFT[d.name]; return !left || ymdL
 
 // Resolves who actually held a slot on a given date, so historical weeks stay accurate.
 function resolveDoctor(doc, di, sv, cl, dateStr) {
+  if (dateStr < WAEL_MON_EVE_END && cl === 'Clinic 2' && di === 1 && sv === 'evening') { doc = 'Dr. Wael'; }
   if (dateStr < RAMI_END) {
     if (cl === 'Clinic 2' && di === 1 && sv === 'evening') { doc = 'Dr. Rami'; }
     else if (cl === 'Clinic 2' && di === 2 && (sv === 'afternoon' || sv === 'evening')) { doc = 'Dr. Rami'; }
@@ -561,7 +563,7 @@ function loadSchedule() {
   a(1,'afternoon','Clinic 3','Dr. Nehal','Dana / Ebtehal');
   a(1,'afternoon','Clinic 4','Dr. Amira','Melani / Amani H');
   a(1,'evening','Clinic 1','','');
-  a(1,'evening','Clinic 2','Dr. Wael','Kholood'); // Dr. Rami before RAMI_END
+  a(1,'evening','Clinic 2','','Kholood'); // empty from WAEL_MON_EVE_END; Dr. Wael before it, Dr. Rami before RAMI_END, Dr. Fatima before RAMI_START
   a(1,'evening','Clinic 3','Dr. Iina','Ebtehal');
   a(1,'evening','Clinic 4','Dr. Amira','Meelani');
   a(2,'morning','Clinic 1',SRG,'Ahlam');
