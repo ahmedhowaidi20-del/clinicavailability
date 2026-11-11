@@ -246,7 +246,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   </div>
   <div style="text-align:center;margin-bottom:8px;">
     <button onclick="goToThisWeek()" style="background:linear-gradient(135deg,#1976D2,#1565C0);border:none;border-radius:99px;padding:7px 20px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(21,101,192,0.3);" fdprocessedid="2pu5rd">⭐ This Week</button>
-    <button id="word-btn" onclick="exportWeekDocx()" title="Download this week as the printable clinic schedule (Word)" style="margin-left:6px;background:linear-gradient(135deg,#2B579A,#1E3F73);border:none;border-radius:99px;padding:7px 16px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(43,87,154,0.3);">📄 Word</button>
+    <button id="word-btn" onclick="exportWeekDocx()" title="Download this week (with absences and bookings) as a Word schedule" style="margin-left:6px;background:linear-gradient(135deg,#2B579A,#1E3F73);border:none;border-radius:99px;padding:7px 16px;color:#fff;font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;box-shadow:0 2px 8px rgba(43,87,154,0.3);">📄 Word</button>
   </div>
 
   <div id="schedule-view"><div class="day-block today-block"><div class="day-title"><span>Sunday <span class="today-badge">TODAY</span></span><span class="ddate">Sun 20 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-free" onclick="openBookingModal(0,&#39;afternoon&#39;,&#39;Clinic 4&#39;,&#39;2026-09-19&#39;,&#39;Dr.Noran&#39;,&#39;Orthodontist&#39;)"><span class="free-top">FREE 📅</span><span class="free-doc">Dr.Noran</span><span class="free-spec">Orthodontist</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-booked" style="background:linear-gradient(135deg,#333,#111)"><span class="booked-top">FULLY BOOKED</span><span class="booked-doc" onclick="event.stopPropagation();openCancelModal(&#39;1a900003-2102-43b8-8b31-bf0785d60208&#39;)" style="cursor:pointer;display:block;border-bottom:0.5px solid rgba(255,255,255,0.15);padding:1px 0;">Dr.Noran 16:00-20:00</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Monday</span><span class="ddate">Mon 21 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Tuesday</span><span class="ddate">Tue 22 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-booked" style="background:linear-gradient(135deg,#333,#111)"><span class="booked-top">FULLY BOOKED</span><span class="booked-doc" onclick="event.stopPropagation();openCancelModal(&#39;0e11ff2d-2ee2-4fc5-a59b-6c959124e5c5&#39;)" style="cursor:pointer;display:block;border-bottom:0.5px solid rgba(255,255,255,0.15);padding:1px 0;">Dr.Amira 08:30-12:30</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span><span class="sp-note">(Hygiene)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Wednesday</span><span class="ddate">Wed 23 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th">-</th><th>Clinic 1</th><th>Clinic 2</th><th>Clinic 3</th><th>Clinic 4</th></tr></thead><tbody><tr><td class="sess-td">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Howaidi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr><tr><td class="sess-td">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-prostho">Dr.Kariem</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td></tr><tr><td class="sess-td">Eve</td><td><div class="dc dc-empty">-</div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Maghrabi</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-perio">Dr.Nehal</span></div></td><td><div class="dc dc-empty">-</div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Thursday</span><span class="ddate">Thu 24 Sept</span></div><table class="sch-table"><thead><tr><th class="sess-th" style="background:#E6A817;">-</th><th class="thu-th">Clinic 1</th><th class="thu-th">Clinic 2</th><th class="thu-th">Clinic 3</th><th class="thu-th">Clinic 4</th></tr></thead><tbody><tr><td class="sess-td thu-sess">AM</td><td><div class="dc dc-busy"><span class="doc-name sp-surgery">Surgery</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Mawadah</span></div></td></tr><tr><td class="sess-td thu-sess">PM</td><td><div class="dc dc-busy"><span class="doc-name sp-resto">Dr.Ghaidaa</span><span class="sp-note">(Consultation)</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-endo">Dr.Fatima</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-fixed">Dr.Amira</span></div></td><td><div class="dc dc-busy"><span class="doc-name sp-ortho">Dr.Iina</span></div></td></tr></tbody></table></div><div class="day-block"><div class="day-title"><span>Friday</span><span class="ddate">Fri 25 Sept</span></div><div class="weekend-block"><span class="weekend-label">🌙 Weekend — No Clinics</span></div></div><div class="day-block"><div class="day-title"><span>Saturday</span><span class="ddate">Sat 26 Sept</span></div><div class="weekend-block"><span class="weekend-label">🌙 Weekend — No Clinics</span></div></div></div>
@@ -1326,8 +1326,8 @@ async function deleteGroup(ids) {
 
 // ── WORD EXPORT: the week on screen as the department's printable clinic schedule ──
 // Same template as the printed schedule (A4 landscape, one page, Clinics 1–5, Dr. Fatima's sign-off).
-// Shows the regular weekly grid for the selected week (absences and bookings are not part of it),
-// each day resolved through resolveDoctor() exactly as the Schedule tab shows it.
+// Shows the selected week as it stands: each day resolved through resolveDoctor() like the Schedule tab,
+// absent doctors' clinics marked FREE, booked ones with the booker, time and the absent doctor, closed days greyed.
 var DOCX_URLS = [
   'https://cdn.jsdelivr.net/npm/docx@9.5.1/dist/index.iife.js',
   'https://unpkg.com/docx@9.5.1/dist/index.iife.js'
@@ -1383,20 +1383,40 @@ function printCellName(raw, di, sv, cl) {
 }
 
 function weekPrintRows(sun) {
+  // Cells are plain strings for the regular grid, or objects for slots that changed this week:
+  //   {kind:'free', absent, marks}            doctor absent, nobody booked yet
+  //   {kind:'booked', absent, marks, bookings, partial}   booked by another doctor
+  //   {kind:'closed', label}                  whole day closed (Eid, National Day, ...)
   var SESS = [['morning','AM'],['afternoon','PM'],['evening','Evening']];
   var rows = [];
   for (var di = 0; di < 5; di++) {
     var date = new Date(sun.getTime()); date.setDate(sun.getDate() + di);
-    var dsUTC = fmt(date); // same date key the Schedule tab passes to resolveDoctor()
+    var dsUTC = fmt(date); // same date key the Schedule tab uses for resolveDoctor(), absences and bookings
+    var ds = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+    var closed = getClosedPeriod(ds);
     for (var si = 0; si < SESS.length; si++) {
       var sv = SESS[si][0];
       if (di === 4 && sv === 'evening') continue; // Thursday: morning and afternoon only
+      var head = [si === 0 ? DAYS[di] : '', SESS[si][1]];
+      if (closed) { rows.push(head.concat([{kind: 'closed', label: closed.label || 'Clinic Closed'}])); continue; }
       var cells = CLINICS.map(function(cl) {
         var slot = state.schedule[sk(di, sv, cl)] || {};
-        return printCellName(resolveDoctor(slot.doctor || '', di, sv, cl, dsUTC), di, sv, cl);
+        var doc = resolveDoctor(slot.doctor || '', di, sv, cl, dsUTC);
+        if (!doc) return '';
+        var open = doc === 'OPEN_SLOT';
+        if (!open && !isAbsent(doc, dsUTC, sv)) return printCellName(doc, di, sv, cl);
+        var printed = open ? '' : printCellName(doc, di, sv, cl).split('|')[0];
+        var nameOnly = printed.replace(/[*#^]+$/, '');
+        var info = {absent: nameOnly, marks: printed.slice(nameOnly.length)};
+        var bookings = getBookings(di, sv, cl, dsUTC);
+        if (!bookings.length) { info.kind = 'free'; return info; }
+        info.kind = 'booked';
+        info.bookings = bookings.map(function(b) { return {name: PRINT_NAME_FIX[b.doctor] || b.doctor, from: b.time_from, to: b.time_to}; });
+        info.partial = getAvailableTimes(sv, bookings).from.length > 0;
+        return info;
       });
       var c5 = sv === 'morning' ? 'Surgery' : sv === 'afternoon' ? 'INPT:' + PRINT_CLINIC5_PM[di] : '';
-      rows.push([si === 0 ? DAYS[di] : '', SESS[si][1]].concat(cells, [c5]));
+      rows.push(head.concat(cells, [c5]));
     }
   }
   return rows;
@@ -1411,6 +1431,7 @@ function buildScheduleDoc(D, rows, validFrom, validTo) {
   var INK = '1F2933', MUTED = '5B6770', GRID = '9AA5AE';
   var HEAD_BG = '1F3A5F', DAY_BG = 'E3E8EE', EVE_BG = 'F7EEF2', INPT_BG = 'EEF3F8';
   var BLUE = '2F5D9E', PLUM = '9B2F6A', MAUVE = 'A0708C';
+  var FREE_BG = 'E3F4E8', FREE_INK = '1E7B3A', BOOK_BG = 'FFF1D6', BOOK_INK = '8A5A00', CLOSED_BG = 'ECEFF1';
   function colorFor(t) {
     return t.indexOf('Howaidi') >= 0 ? BLUE :
       (t.indexOf('Surgery') >= 0 || t.indexOf('Noran') >= 0) ? PLUM :
@@ -1422,7 +1443,7 @@ function buildScheduleDoc(D, rows, validFrom, validTo) {
   function thick(c) { return {style: BorderStyle.SINGLE, size: 12, color: c || INK}; }
   function run(text, o) {
     o = o || {};
-    return new TextRun({text: text, font: FONT, size: o.size != null ? o.size : 23, bold: o.bold != null ? o.bold : true, color: o.color || INK});
+    return new TextRun({text: text, font: FONT, size: o.size != null ? o.size : 23, bold: o.bold != null ? o.bold : true, color: o.color || INK, strike: !!o.strike});
   }
   function para(children, o) {
     o = o || {};
@@ -1439,6 +1460,18 @@ function buildScheduleDoc(D, rows, validFrom, validTo) {
 
   function content(text) {
     if (!text) return [para([])];
+    if (typeof text === 'object') {
+      var who = text.absent
+        ? [run(text.absent, {size: 18, bold: false, color: MUTED, strike: true}), run(text.marks + ' absent', {size: 18, bold: false, color: MUTED})]
+        : [run('Open slot', {size: 18, bold: false, color: MUTED})];
+      if (text.kind === 'free') return [para([run('FREE', {size: 21, color: FREE_INK})]), para(who)];
+      var out = text.bookings.map(function(b) {
+        return para([run(b.name, {size: 21, color: BOOK_INK}), run(' ' + b.from + '\u2013' + b.to, {size: 17, bold: false, color: MUTED})]);
+      });
+      if (text.partial) who.push(run(' \u00B7 rest free', {size: 18, bold: false, color: FREE_INK}));
+      out.push(para(who));
+      return out;
+    }
     if (text.indexOf('INPT:') === 0) {
       var n = text.slice(5);
       return [para([run(n, {color: colorFor(n)}), run(' (Inpatients)', {size: 18, bold: false, color: MUTED})])];
@@ -1474,9 +1507,12 @@ function buildScheduleDoc(D, rows, validFrom, validTo) {
     var children = [];
     if (day) children.push(cell([para([run(day, {size: 24})])], DAY_W, {rowSpan: groupSize[day], fill: DAY_BG, borders: topB}));
     children.push(cell([para([run(sess, {size: 21})])], SESS_W, {fill: isEve ? EVE_BG : undefined, borders: topB}));
-    clinics.forEach(function(c) {
+    if (clinics.length === 1 && clinics[0] && clinics[0].kind === 'closed') {
+      children.push(cell([para([run(clinics[0].label, {size: 21, color: MUTED})])], CLIN_W * 5, {columnSpan: 5, fill: CLOSED_BG, borders: topB}));
+    } else clinics.forEach(function(c) {
       var isInpt = typeof c === 'string' && c.indexOf('INPT:') === 0;
-      children.push(cell(content(c), CLIN_W, {fill: isInpt ? INPT_BG : (isEve ? EVE_BG : undefined), borders: topB}));
+      var fill = c && c.kind === 'free' ? FREE_BG : c && c.kind === 'booked' ? BOOK_BG : isInpt ? INPT_BG : (isEve ? EVE_BG : undefined);
+      children.push(cell(content(c), CLIN_W, {fill: fill, borders: topB}));
     });
     return new TableRow({height: {value: ROW_H, rule: HeightRule.ATLEAST}, children: children});
   });
